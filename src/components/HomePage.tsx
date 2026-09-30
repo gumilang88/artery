@@ -48,14 +48,14 @@ function usePeachMarkets() {
 }
 
 const featureCards = [
-  { icon: Search, title: "ARC market list", text: "Browse ARC tokens from Artery's five-minute terminal feed." },
-  { icon: Route, title: "Contract-first navigation", text: "Open the exact token you selected using its contract address." },
-  { icon: BarChart3, title: "Market context", text: "Compare price, liquidity, volume, and 24-hour movement before opening a pair." },
-  { icon: Wallet, title: "Wallet-first flow", text: "Review the market and route before connecting a wallet. Trade execution is still in development." },
-  { icon: Gauge, title: "Compact trading workspace", text: "Chart, pair details, order entry, and recent activity stay in one view." },
-  { icon: Radio, title: "Fresh market data", text: "The Market feed refreshes every 15 seconds while the page is open. Outages are shown clearly." },
-  { icon: LockKeyhole, title: "Address-first identity", text: "Duplicate symbols remain distinct because every market is keyed by its contract address." },
-  { icon: Blocks, title: "ARC only", text: "Network settings, explorer links, quote assets, and copy are built around ARC Mainnet." },
+  { icon: Search, title: "Deep Market Discovery", text: "Browse ARC tokens with real-time price, volume, and liquidity data from the terminal feed." },
+  { icon: Route, title: "Contract-First Routing", text: "Every trade routes by contract address — no ambiguity, no duplicate symbol confusion." },
+  { icon: BarChart3, title: "Institutional Analytics", text: "Compare price, liquidity, volume, and 24-hour movement with institutional-grade precision." },
+  { icon: Wallet, title: "Wallet-Ready Flow", text: "Review the market and route before connecting. Trade execution is built for safety first." },
+  { icon: Gauge, title: "Sub-Second Updates", text: "Market feed refreshes every 15 seconds. Chart and order data update in real-time." },
+  { icon: Radio, title: "Live Market Feed", text: "ARC market data streams continuously while the page is open. Outages are shown clearly." },
+  { icon: LockKeyhole, title: "Secure Identity", text: "Every market is keyed by its contract address — duplicate symbols remain distinct and verifiable." },
+  { icon: Blocks, title: "ARC Native", text: "Network settings, explorer links, quote assets, and infrastructure built around ARC Mainnet." },
 ] as const;
 
 const faq = [
@@ -178,36 +178,36 @@ export function HomePage() {
       <section className="home-hero">
         <div className="home-hero-copy">
           <div>
-            <span className="hm-eyebrow"><i /> Built for ARC Mainnet</span>
-            <h1>ARC markets in view.<br /><span>One trading desk.</span></h1>
+            <span className="hm-eyebrow"><i /> ARC Mainnet · Live</span>
+            <h1>The Premier ARC<br />Market Terminal<br /><span>For Spot Trading.</span></h1>
           </div>
           <div className="hm-hero-side">
-            <p>Follow the ARC market list, compare five-minute volume, and inspect tokens by contract.</p>
-            <div><Link className="home-cta primary" href="/markets/spot">Explore markets <ArrowRight size={15} /></Link><Link className="home-cta" href="/docs/user-docs/start">How it works</Link></div>
+            <p>Discover tokens, track real-time volume, and trade across ARC with institutional-grade speed.</p>
+            <div><Link className="home-cta primary" href="/markets/spot">Explore Spot Markets <ArrowRight size={15} /></Link><Link className="home-cta" href="/trade">Start Trading</Link></div>
           </div>
         </div>
         <TradingTerminal tokens={peachTokens} />
       </section>
 
       <section ref={ref_chain} className="chain-strip reveal">
-        <p>ARC MARKET DATA, BUILT FOR ARTERY</p>
+        <p>SUPPORTED ASSETS &amp; INFRASTRUCTURE</p>
         <div>{["ARC MAINNET", "USDC", "ARGUS", "WETH", "cirBTC", "EURC", "UNISWAP V4"].map((item) => <span key={item}>{item}</span>)}</div>
       </section>
 
       <section ref={ref_market} className="home-split market-home reveal">
         <div className="home-section-copy">
-          <span className="hm-section-label">MARKET DIRECTORY</span>
-          <h2>See what is trading<br />before you open a pair.</h2>
-          <p>See each token's address, USD price, liquidity, five-minute volume, and daily movement.</p>
-          <Link href="/markets/spot">View ARC market list <ArrowRight size={14} /></Link>
-          <div className="home-stats"><b>5m<small>Terminal timeframe</small></b><b>100<small>Tokens per request</small></b></div>
+          <span className="hm-section-label">EXPLORE SPOT MARKETS</span>
+          <h2>Discover what's trading<br />across ARC.</h2>
+          <p>Real-time prices, 24h volume, liquidity depth, and market movement — all in one view.</p>
+          <Link href="/markets/spot">View All Markets <ArrowRight size={14} /></Link>
+          <div className="home-stats"><b>24H<small>Volume tracking</small></b><b>100+<small>Active pairs</small></b></div>
         </div>
         <MiniMarkets tokens={peachTokens} />
       </section>
 
       <section ref={ref_engine} className="engine-section reveal">
         <div className="home-section-copy">
-          <span className="hm-section-label">MARKET IDENTITY</span>
+          <span className="hm-section-label">TRANSPARENT MARKET IDENTITY</span>
           <h2>A ticker is a label.<br />The address is the asset.</h2>
           <p>Market feeds can contain duplicate symbols. Artery keeps each token tied to its contract address so the market you open is the market you selected.</p>
           <div className="hm-proof-list">
@@ -227,23 +227,23 @@ export function HomePage() {
       </section>
 
       <section ref={ref_feature} className="feature-section reveal">
-        <div className="hm-section-heading"><span className="hm-section-label">THE WORKSPACE</span><h2>Less switching.<br />More context.</h2><p>Everything on the page exists to help you identify a market, inspect it, and prepare the next action.</p></div>
+        <div className="hm-section-heading"><span className="hm-section-label">INSTITUTIONAL-GRADE SPEED &amp; ENGINEERING</span><h2>Built for serious<br />traders.</h2><p>Every component is engineered for speed, accuracy, and reliability — from market data to order execution.</p></div>
         <div className="feature-grid">{featureCards.map(({ icon: Icon, title, text }) => <article key={title}><Icon size={19} /><div><h3>{title}</h3><p>{text}</p></div></article>)}</div>
       </section>
 
       <section ref={ref_execution} className="home-split execution-section reveal">
         <div className="home-section-copy">
-          <span className="hm-section-label">MARKET PREVIEW</span>
-          <h2>Know the market<br />before you trade.</h2>
-          <p>Check the token address, quote asset, reference price, and ARC network in one place. This preview does not submit transactions.</p>
-          <ol className="hm-steps"><li><b>01</b><span>Select a ARC-listed token by address.</span></li><li><b>02</b><span>Check its USD market data.</span></li><li><b>03</b><span>Open its detail page for more context.</span></li></ol>
-          <Link href="/markets/spot">Browse ARC markets <ArrowRight size={14} /></Link>
+          <span className="hm-section-label">ADVANCED ORDER PREVIEW</span>
+          <h2>Know the market<br />before you execute.</h2>
+          <p>Verify token address, quote asset, reference price, and network details before placing any order.</p>
+          <ol className="hm-steps"><li><b>01</b><span>Select a token by contract address.</span></li><li><b>02</b><span>Review USD market data and liquidity.</span></li><li><b>03</b><span>Execute with full market context.</span></li></ol>
+          <Link href="/markets/spot">Browse Markets <ArrowRight size={14} /></Link>
         </div>
         <ExecutionPanel tokens={peachTokens} />
       </section>
 
       <section ref={ref_unified} className="unified-section reveal">
-        <div className="hm-section-heading split"><div><span className="hm-section-label">ONE DIRECTORY</span><h2>ARC tokens.<br />One market view.</h2></div><p>Keep the token identity and ARC market data together as you move through the interface.</p></div>
+        <div className="hm-section-heading split"><div><span className="hm-section-label">UNIFIED LIQUIDITY</span><h2>All ARC tokens.<br />One terminal.</h2></div><p>Aggregate liquidity, unified order flow, and seamless cross-pair navigation in a single interface.</p></div>
         <div className="unified-diagram">
           <div className="source-stack">{["USDC", "ARGUS", "WETH", "cirBTC", "EURC"].map((asset) => <span key={asset}><i>{asset.slice(0, 1)}</i>{asset}<small>Quote asset</small></span>)}</div>
           <div className="hm-connector"><i /><i /><i /><i /><i /></div>
@@ -254,7 +254,7 @@ export function HomePage() {
       </section>
 
       <section ref={ref_build} className="build-section reveal">
-        <div className="hm-section-heading"><span className="hm-section-label">BUILD ON ARTERY</span><h2>Use the same market model.</h2></div>
+        <div className="hm-section-heading"><span className="hm-section-label">BUILD ON ARTERY</span><h2>Developer-first infrastructure.</h2></div>
         <div><Link href="/docs/developer-docs"><Braces size={20} /><b>Developer docs</b><p>ARC configuration, market identity, and routing architecture.</p><span>Read docs <ArrowRight size={13} /></span></Link><Link href="/docs/sdk"><Blocks size={20} /><b>SDK guide</b><p>Typed helpers for tokens, quotes, and wallet-aware interfaces.</p><span>View SDK <ArrowRight size={13} /></span></Link><Link href="/docs/api"><Radio size={20} /><b>API reference</b><p>Market board, token metadata, pagination, and response fields.</p><span>View API <ArrowRight size={13} /></span></Link></div>
       </section>
 
@@ -263,7 +263,7 @@ export function HomePage() {
         <div>{faq.map(([question, answer], index) => <article key={question}><button onClick={() => setOpen(open === index ? null : index)}><span>{String(index + 1).padStart(2, "0")}</span>{question}<b>{open === index ? "−" : "+"}</b></button>{open === index && <p>{answer}</p>}</article>)}</div>
       </section>
 
-      <section className="prefooter"><span className="hm-section-label">ARC MARKETS START HERE</span><h2>Find the contract.<br />Open the pair.</h2><p>Browse the ARC market directory built for ARC.</p><div><Link className="home-cta primary" href="/markets/spot">Explore markets <ArrowRight size={15} /></Link><Link className="home-cta" href="/connect">Connect wallet</Link></div></section>
+      <section className="prefooter"><span className="hm-section-label">START TRADING ON ARC</span><h2>Ready to trade?<br />Jump in.</h2><p>Access the most advanced ARC market terminal available.</p><div><Link className="home-cta primary" href="/markets/spot">Explore Spot Markets <ArrowRight size={15} /></Link><Link className="home-cta" href="/connect">Connect Wallet</Link></div></section>
     <Footer />
     </main>
   );

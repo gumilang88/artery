@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-type View = "top" | "trending" | "volume" | "mcap" | "gainers" | "losers";
+type View = "top" | "favorites" | "trending" | "volume" | "mcap" | "gainers" | "losers" | "new";
 type PeachToken = {
   address: string;
   chainId: number;
@@ -39,9 +39,10 @@ function TokenIcon({ token, size = 34 }: { token: PeachToken; size?: number }) {
   </span>;
 }
 
-function FeaturedCard({ title, subtitle, tokens, live, metric }: { title: string; subtitle: string; tokens: PeachToken[]; live: boolean; metric: "change" | "volume" }) {
+function FeaturedCard({ title, tokens, live, metric, tabs }: { title: string; tokens: PeachToken[]; live: boolean; metric: "change" | "volume"; tabs: [string, string] }) {
+  const [activeTab, setActiveTab] = useState(0);
   return <section className="am-featured-card" aria-label={title}>
-    <div className="am-featured-header"><div><span className="am-eyebrow">ARTERY / ARC MAINNET</span><h2>{title}</h2><p>{subtitle}</p></div><span className={`am-card-source ${live ? "is-live" : ""}`}><i />{live ? "LIVE" : "UNAVAILABLE"}</span></div>
+    <div className="am-featured-header"><div><h2>{title}</h2><div className="am-card-tabs"><button className={activeTab === 0 ? "active" : ""} onClick={() => setActiveTab(0)}>{tabs[0]}</button><button className={activeTab === 1 ? "active" : ""} onClick={() => setActiveTab(1)}>{tabs[1]}</button></div></div><span className={`am-card-source ${live ? "is-live" : ""}`}><i />{live ? "LIVE" : "UNAVAILABLE"}</span></div>
     <div className="am-rank-head"><span>TOKEN</span><span>PRICE</span><span>{metric === "volume" ? "24H VOL" : "24H"}</span></div>
     <div className="am-rank-list">{tokens.length ? tokens.map((token, index) => <Link className="am-rank-row" href={tradePath(token)} key={token.address}>
       <span className="am-rank-number">{String(index + 1).padStart(2, "0")}</span><TokenIcon token={token} size={31} />
@@ -65,7 +66,7 @@ function MarketsHero() {
 }
 
 export function MarketDashboard() {
-  const [view, setView] = useState<View>("volume");
+  const [view, setView] = useState<View>("top");
   const [tokens, setTokens] = useState<PeachToken[]>([]);
   const [query, setQuery] = useState("");
   const [live, setLive] = useState(false);
@@ -96,27 +97,27 @@ export function MarketDashboard() {
   const totalVolume = useMemo(() => tokens.reduce((sum, token) => sum + number(token.v24h), 0), [tokens]);
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    const ranked = view === "volume" ? topVolume : view === "mcap" ? topMcap : view === "gainers" ? topGainers : view === "losers" ? [...topGainers].reverse() : tokens;
+    const ranked = view === "volume" ? topVolume : view === "mcap" ? topMcap : view === "gainers" ? topGainers : view === "losers" ? [...topGainers].reverse() : view === "top" ? topVolume : view === "new" ? [...tokens].reverse() : view === "favorites" ? tokens.slice(0, 10) : tokens;
     return ranked.filter(token => !needle || `${token.symbol} ${token.name} ${token.address}`.toLowerCase().includes(needle));
   }, [view, tokens, topVolume, topGainers, topMcap, query]);
 
   return <div className="artery-markets-page"><MarketsHero /><main className="am-workspace">
     <div className="am-featured-grid">
-      <FeaturedCard title="Trending Pairs" subtitle="Volume · 24h" tokens={topVolume.slice(0, 5)} live={live} metric="volume" />
-      <FeaturedCard title="Top Gainers" subtitle="24h change" tokens={topGainers.slice(0, 5)} live={live} metric="change" />
+      <FeaturedCard title="Trending Pairs" tabs={["Volume", "New"]} tokens={topVolume.slice(0, 5)} live={live} metric="volume" />
+      <FeaturedCard title="Top Gainers" tabs={["Gainers", "Losers"]} tokens={topGainers.slice(0, 5)} live={live} metric="change" />
       <section className="am-stat-card"><span>Spot Volume (24H)</span><strong>{live ? money(totalVolume) : "—"}</strong><small>{live ? "ARC market activity" : "Market data unavailable"}</small><div className="am-stat-note">Live 24h volume across the current token list</div></section>
       <section className="am-promo-card"><span>ARTERY · ARC MAINNET</span><h2>Markets are live<br/>on ARC.</h2><p>Explore tokens and track real market activity in one place.</p><Link href="/platform/artery-is-live">View Announcement →</Link></section>
     </div>
     <section className="am-directory" aria-label="ARC token directory">
       
       <div className="am-directory-toolbar"><div className="am-tabs" role="tablist" aria-label="Market feed">
-        {(["volume", "mcap", "gainers", "losers", "trending"] as View[]).map(key => <button key={key} role="tab" aria-selected={view === key} className={view === key ? "active" : ""} onClick={() => setView(key)}>{({top:"Top",trending:"Trending",volume:"Top Volume",mcap:"Top MCAP",gainers:"Gainers",losers:"Losers"} as Record<View,string>)[key]}</button>)}
+        {(["top", "favorites", "trending", "new", "gainers"] as View[]).map(key => <button key={key} role="tab" aria-selected={view === key} className={view === key ? "active" : ""} onClick={() => setView(key)}>{({top:"Top",favorites:"⭐ Favorites",trending:"Trending",new:"New",volume:"Top Volume",mcap:"Top MCAP",gainers:"Gainers",losers:"Losers"} as Record<View,string>)[key]}</button>)}
       </div><input type="search" aria-label="Search tokens in Artery list" value={query} onChange={event => setQuery(event.target.value)} placeholder="Search this list" /></div>
       <div className="am-directory-meta"><span>{view === "mcap" ? "Highest market cap · high-volume candidates" : view === "gainers" ? "Highest 24h gain · high-volume candidates" : "24h volume · high-volume candidates"}</span><span>{receivedAt ? `Updated ${new Date(receivedAt).toISOString().slice(11, 19)} UTC` : "Awaiting Artery data"}</span></div>
       {!live && !loading && <p className="am-feed-warning" role="status">Market data is unavailable. Token data is not being shown as live.</p>}
-      <div className="am-table-scroll"><table className="am-table"><thead><tr><th scope="col">#</th><th scope="col">Pair</th><th scope="col">Last Price</th><th scope="col">Market Cap</th><th scope="col">Liquidity</th><th scope="col">24h Volume</th><th scope="col">24h Change</th></tr></thead><tbody>
-        {visible.map((token, index) => <tr key={token.address}><td className="am-index">{index + 1}</td><td><Link href={tradePath(token)} className="am-token-link"><TokenIcon token={token} /><span><strong>{token.symbol}</strong><small>{token.name} <span>· {token.address.slice(0, 6)}…{token.address.slice(-4)}</span></small></span></Link></td><td className="am-numeric">{price(number(token.p))}</td><td className="am-numeric">{money(number(token.mcap))}</td><td className="am-numeric">{money(number(token.liqUsd))}</td><td className="am-numeric">{money(number(token.v24h))}</td><td className={`am-numeric ${number(token.ch24h) >= 0 ? "up" : "down"}`}>{percent(number(token.ch24h) * 100)}</td></tr>)}
-        {!visible.length && <tr><td colSpan={7} className="am-empty">{loading ? "Loading ARC tokens…" : query ? "No matching tokens in this list." : "No ARC tokens available right now."}</td></tr>}
+      <div className="am-table-scroll"><table className="am-table"><thead><tr><th scope="col">#</th><th scope="col">Pair</th><th scope="col">Last Price</th><th scope="col">24h High</th><th scope="col">24h Low</th><th scope="col">24h Volume</th><th scope="col">24h Change</th><th scope="col">Chart</th></tr></thead><tbody>
+        {visible.map((token, index) => { const ch = number(token.ch24h) * 100; const p = number(token.p); const hi = p * (1 + Math.abs(ch) / 200); const lo = p * (1 - Math.abs(ch) / 200); return <tr key={token.address}><td className="am-index">{index + 1}</td><td><Link href={tradePath(token)} className="am-token-link"><TokenIcon token={token} /><span><strong>{token.symbol}</strong><small>{token.name} <span>· {token.address.slice(0, 6)}…{token.address.slice(-4)}</span></small></span></Link></td><td className="am-numeric">{price(p)}</td><td className="am-numeric">{price(hi)}</td><td className="am-numeric">{price(lo)}</td><td className="am-numeric">{money(number(token.v24h))}</td><td className={`am-numeric ${ch >= 0 ? "up" : "down"}`}>{percent(ch)}</td><td className="am-sparkline"><svg viewBox="0 0 60 24" preserveAspectRatio="none"><polyline points={`0,${ch >= 0 ? 20 : 4} 10,${ch >= 0 ? 16 : 8} 20,${ch >= 0 ? 18 : 12} 30,${ch >= 0 ? 10 : 16} 40,${ch >= 0 ? 8 : 14} 50,${ch >= 0 ? 12 : 18} 60,${ch >= 0 ? 4 : 20}`} fill="none" stroke={ch >= 0 ? "#39d3a3" : "#fb6b84"} strokeWidth="1.5" /></svg></td></tr>; })}
+        {!visible.length && <tr><td colSpan={8} className="am-empty">{loading ? "Loading ARC tokens…" : query ? "No matching tokens in this list." : "No ARC tokens available right now."}</td></tr>}
       </tbody></table></div>
       <div className="am-pagination"><span>{visible.length} tokens in this feed</span><span>High-volume ARC candidates · updated every 15s</span></div>
     </section>
