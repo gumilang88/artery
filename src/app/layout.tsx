@@ -5,6 +5,10 @@ import "./markets.css";
 import "./trade.css";
 import "./trade-layout.css";
 import "./connect.css";
+import "./volume-hero.css";
+import "./volume-hero-compact.css";
+import "./volume-hero-preview.css";
+import "./volume-chart.css";
 import {Shell} from "@/components/Shell";
 export const metadata:Metadata={title:"Artery — ARC Markets",description:"Discover and trade tokens across ARC."};
 export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body><Shell>{children}</Shell></body></html>}

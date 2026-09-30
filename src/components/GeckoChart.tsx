@@ -25,7 +25,7 @@ export function GeckoChart({ token, symbol }: { token: string; symbol: string })
       timeScale: { borderColor: "#333941", timeVisible: true, secondsVisible: false, rightOffset: 4 },
       crosshair: { vertLine: { color: "#737c89" }, horzLine: { color: "#737c89" } },
     });
-    const candles = instance.addSeries(CandlestickSeries, { upColor: "#42cda2", downColor: "#ee7080", borderVisible: false, wickUpColor: "#42cda2", wickDownColor: "#ee7080", priceFormat: { type: "price", precision: 8, minMove: 0.00000001 } });
+    const candles = instance.addSeries(CandlestickSeries, { upColor: "#00f5a0", downColor: "#ff3f5f", borderVisible: true, borderUpColor: "#62ffc3", borderDownColor: "#ff8296", wickUpColor: "#62ffc3", wickDownColor: "#ff8296", priceFormat: { type: "price", precision: 8, minMove: 0.00000001 } });
     const volumes = instance.addSeries(HistogramSeries, { priceFormat: { type: "volume" }, priceScaleId: "" });
     volumes.priceScale().applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
     chart.current = instance; priceSeries.current = candles; volumeSeries.current = volumes;
@@ -50,7 +50,7 @@ export function GeckoChart({ token, symbol }: { token: string; symbol: string })
         const unique = rows.filter((row, index) => index === 0 || row[0] !== rows[index - 1][0]);
         if (!unique.length) { setStatus("empty"); return; }
         const candleData: CandlestickData<Time>[] = unique.map(row => ({ time: row[0] as Time, open: row[1], high: row[2], low: row[3], close: row[4] }));
-        const volumeData: HistogramData<Time>[] = unique.map(row => ({ time: row[0] as Time, value: row[5], color: row[4] >= row[1] ? "#42cda255" : "#ee708055" }));
+        const volumeData: HistogramData<Time>[] = unique.map(row => ({ time: row[0] as Time, value: row[5], color: row[4] >= row[1] ? "#00f5a088" : "#ff3f5f88" }));
         priceSeries.current?.setData(candleData);
         volumeSeries.current?.setData(volumeData);
         chart.current?.timeScale().fitContent();

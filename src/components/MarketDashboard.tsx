@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { LiveVolumeHero } from "@/components/LiveVolumeHero";
+import { SpotVolumeChart } from "@/components/SpotVolumeChart";
 
 type View = "top" | "favorites" | "trending" | "volume" | "mcap" | "gainers" | "losers" | "new";
 type PeachToken = {
@@ -39,12 +41,13 @@ function TokenIcon({ token, size = 34 }: { token: PeachToken; size?: number }) {
   </span>;
 }
 
-function FeaturedCard({ title, tokens, live, metric, tabs }: { title: string; tokens: PeachToken[]; live: boolean; metric: "change" | "volume"; tabs: [string, string] }) {
+function FeaturedCard({ title, tokens, alternateTokens, live, metric, tabs }: { title: string; tokens: PeachToken[]; alternateTokens: PeachToken[]; live: boolean; metric: "change" | "volume"; tabs: [string, string] }) {
   const [activeTab, setActiveTab] = useState(0);
+  const displayedTokens = activeTab === 0 ? tokens : alternateTokens;
   return <section className="am-featured-card" aria-label={title}>
     <div className="am-featured-header"><div><h2>{title}</h2><div className="am-card-tabs"><button className={activeTab === 0 ? "active" : ""} onClick={() => setActiveTab(0)}>{tabs[0]}</button><button className={activeTab === 1 ? "active" : ""} onClick={() => setActiveTab(1)}>{tabs[1]}</button></div></div><span className={`am-card-source ${live ? "is-live" : ""}`}><i />{live ? "LIVE" : "UNAVAILABLE"}</span></div>
     <div className="am-rank-head"><span>TOKEN</span><span>PRICE</span><span>{metric === "volume" ? "24H VOL" : "24H"}</span></div>
-    <div className="am-rank-list">{tokens.length ? tokens.map((token, index) => <Link className="am-rank-row" href={tradePath(token)} key={token.address}>
+    <div className="am-rank-list">{displayedTokens.length ? displayedTokens.map((token, index) => <Link className="am-rank-row" href={tradePath(token)} key={token.address}>
       <span className="am-rank-number">{String(index + 1).padStart(2, "0")}</span><TokenIcon token={token} size={31} />
       <span className="am-rank-name"><strong>{token.symbol}</strong><small>{token.name}</small></span>
       <span className="am-rank-price">{price(number(token.p))}<small>USD</small></span>
@@ -54,15 +57,14 @@ function FeaturedCard({ title, tokens, live, metric, tabs }: { title: string; to
 }
 
 function MarketsHero() {
-  const orbs = [
-    { label: "USDC", image: "/tokens/usdc.png", color: "#4678d9", x: 5, y: 128 },
-    { label: "ARC", image: "", color: "#f5699b", x: 29, y: 48 },
-    { label: "WETH", image: "/tokens/weth.png", color: "#827fee", x: 53, y: 150 },
-    { label: "cirBTC", image: "/tokens/cirbtc.png", color: "#f3a754", x: 79, y: 61 },
-  ];
-  return <section className="am-hero"><div className="am-hero-copy"><span className="am-eyebrow">ARC MAINNET · ARC MARKETS</span><h1>Artery Markets</h1><p>Discover tokens, track trades, and explore activity across ARC.</p></div><div className="am-orbit" aria-label="USDC, ARC, WETH and cirBTC market assets">
-    {orbs.map(orb => <div className="am-orb" key={orb.label} style={{ "--orb-color": orb.color, left: `${orb.x}%`, top: orb.y } as React.CSSProperties}><div className="am-orb-sphere">{orb.image && <img src={orb.image} alt="" onError={event => { event.currentTarget.style.display = "none"; }} />}<span>{orb.label}</span></div><div className="am-orb-base" /></div>)}
-  </div></section>;
+  return <section className="vh-market-shell am-live-volume-hero">
+    <div className="vh-market-copy">
+      <span>ARC MAINNET · ARC MARKETS</span>
+      <h1>Artery Markets</h1>
+      <p>Discover tokens, track trades, and explore activity across ARC.</p>
+    </div>
+    <LiveVolumeHero />
+  </section>;
 }
 
 export function MarketDashboard() {
@@ -103,9 +105,9 @@ export function MarketDashboard() {
 
   return <div className="artery-markets-page"><MarketsHero /><main className="am-workspace">
     <div className="am-featured-grid">
-      <FeaturedCard title="Trending Pairs" tabs={["Volume", "New"]} tokens={topVolume.slice(0, 5)} live={live} metric="volume" />
-      <FeaturedCard title="Top Gainers" tabs={["Gainers", "Losers"]} tokens={topGainers.slice(0, 5)} live={live} metric="change" />
-      <section className="am-stat-card"><span>Spot Volume (24H)</span><strong>{live ? money(totalVolume) : "—"}</strong><small>{live ? "ARC market activity" : "Market data unavailable"}</small><div className="am-stat-note">Live 24h volume across the current token list</div></section>
+      <FeaturedCard title="Trending Pairs" tabs={["Volume", "New"]} tokens={topVolume.slice(0, 5)} alternateTokens={[...tokens].reverse().slice(0, 5)} live={live} metric="volume" />
+      <FeaturedCard title="Top Gainers" tabs={["Gainers", "Losers"]} tokens={topGainers.filter(token => number(token.ch24h) > 0).slice(0, 5)} alternateTokens={[...tokens].filter(token => number(token.ch24h) < 0).sort((a, b) => number(a.ch24h) - number(b.ch24h)).slice(0, 5)} live={live} metric="change" />
+      <section className="am-stat-card am-volume-card"><span>Spot Volume (24H)</span><strong>{live ? money(totalVolume) : "—"}</strong><small>{live ? "ARC market activity" : "Market data unavailable"}</small><SpotVolumeChart value={totalVolume} live={live} /><div className="am-stat-note">Live 24h volume across the current token list</div></section>
       <section className="am-promo-card"><span>ARTERY · ARC MAINNET</span><h2>Markets are live<br/>on ARC.</h2><p>Explore tokens and track real market activity in one place.</p><Link href="/platform/artery-is-live">View Announcement →</Link></section>
     </div>
     <section className="am-directory" aria-label="ARC token directory">
