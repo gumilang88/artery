@@ -1,0 +1,215 @@
+export type Coin = {
+  name: string;
+  ticker: string;
+  mc: string;
+  description: string;
+  image: string;
+  age: string;
+  creator: string;
+  live?: boolean;
+  charity?: boolean;
+};
+
+export const trendingCoins: Coin[] = [
+  {
+    name: "Catecoin",
+    ticker: "CATE",
+    mc: "$35.1M",
+    description: "CATE Rallies as Community Momentum Builds",
+    image: "/images/coins/cate.jpg",
+    age: "1h",
+    creator: "CATE",
+  },
+  {
+    name: "NotInEmploymentEducationTraining",
+    ticker: "neet",
+    mc: "$31.7M",
+    description: "The Unemployment Arc Continues",
+    image: "/images/coins/neet.jpg",
+    age: "2h",
+    creator: "neet",
+  },
+  {
+    name: "Jotchua",
+    ticker: "Jotchua",
+    mc: "$2.91M",
+    description: "Jotchua Rallies Following IP Push",
+    image: "/images/coins/jotchua.jpg",
+    age: "3h",
+    creator: "Jotchua",
+  },
+  {
+    name: "Jimothy The Raccoon",
+    ticker: "Jimothy",
+    mc: "$9.63M",
+    description: "The Internet Isn't Done With Jimothy Yet",
+    image: "/images/coins/jimothy.jpg",
+    age: "5h",
+    creator: "Jimothy",
+  },
+  {
+    name: "ちいかわ",
+    ticker: "Chiikawa",
+    mc: "$2.07M",
+    description: "The Little World of Chiikawa",
+    image: "/images/coins/chiikawa.jpg",
+    age: "8h",
+    creator: "Chiikawa",
+  },
+  {
+    name: "Tung Tung Tung Sahur",
+    ticker: "TripleT",
+    mc: "$14.4M",
+    description: "Tung Tung Tung Sahur Passes $25M Market Cap",
+    image: "/images/coins/tungtung.jpg",
+    age: "12h",
+    creator: "TripleT",
+  },
+  {
+    name: "The Black Bull",
+    ticker: "ANSEM",
+    mc: "$284M",
+    description: "Golden Bull? Try Black Bull",
+    image: "/images/coins/bull.jpg",
+    age: "1d",
+    creator: "ANSEM",
+  },
+];
+
+export const exploreCoins: Coin[] = [
+  {
+    name: "The Pygmy Hippo",
+    ticker: "MAPLE",
+    mc: "$206K",
+    description: "",
+    image: "/images/coins/hippo.jpg",
+    age: "14d",
+    creator: "HjYPLz",
+  },
+  {
+    name: "fig",
+    ticker: "fig",
+    mc: "$49.7K",
+    description: "Launched on discord.gg/uxento",
+    image: "/images/coins/fig.jpg",
+    age: "36m",
+    creator: "862TYS",
+  },
+  {
+    name: "Bullshit Coin",
+    ticker: "BULLSHIT",
+    mc: "$4.78M",
+    description: "",
+    image: "/images/coins/bullshit.jpg",
+    age: "3d",
+    creator: "GRmwzX",
+    live: true,
+  },
+  {
+    name: "Grompany",
+    ticker: "Grompany",
+    mc: "$397K",
+    description: "",
+    image: "/images/coins/grompany.jpg",
+    age: "4h",
+    creator: "9BjcGY",
+    live: true,
+  },
+  {
+    name: "Pump",
+    ticker: "PUMP",
+    mc: "$1.63B",
+    description: "",
+    image: "/images/coins/pump.jpg",
+    age: "1y",
+    creator: "Doa8F9",
+  },
+  {
+    name: "Phoenix The Eagle",
+    ticker: "PHOENIX",
+    mc: "$55.0K",
+    description: "",
+    image: "/images/coins/phoenix.jpg",
+    age: "13m",
+    creator: "AQYyEL",
+  },
+  {
+    name: "solwifhat",
+    ticker: "SOLWIF",
+    mc: "$54.6K",
+    description: "",
+    image: "/images/coins/solwifhat.jpg",
+    age: "2m",
+    creator: "DjrKyW",
+  },
+  {
+    name: "AirPods POV",
+    ticker: "AirPods",
+    mc: "$7.62K",
+    description: "",
+    image: "/images/coins/airpods.jpg",
+    age: "3m",
+    creator: "4n6XhG",
+  },
+  {
+    name: "Wifcoin",
+    ticker: "WIF",
+    mc: "$69.7K",
+    description: "",
+    image: "/images/coins/wif.jpg",
+    age: "14m",
+    creator: "B1BS8r",
+  },
+  {
+    name: "Tung Tung Tung Sahur",
+    ticker: "TripleT",
+    mc: "$14.4M",
+    description: "LIVE",
+    image: "/images/coins/tungtung.jpg",
+    age: "12h",
+    creator: "AAA111",
+    live: true,
+  },
+  {
+    name: "The Black Bull",
+    ticker: "ANSEM",
+    mc: "$284M",
+    description: "Golden Bull? Try Black Bull",
+    image: "/images/coins/bull.jpg",
+    age: "1d",
+    creator: "BBB222",
+  },
+  {
+    name: "Chiikawa",
+    ticker: "Chiikawa",
+    mc: "$2.07M",
+    description: "The Little World of Chiikawa",
+    image: "/images/coins/chiikawa.jpg",
+    age: "8h",
+    creator: "CCC333",
+  },
+];
+
+export const feedTabs = [
+  "🌟 Movers",
+  "🔥 Mayhem",
+  "🌱 New",
+  "Charities",
+  "🎬 Live",
+  "💰 Market cap",
+  "🤖 Agents",
+  "🪐 Oldest",
+  "💥 Last trade",
+];
+
+export const sidebarItems = [
+  { label: "Home", href: "/", icon: "home" },
+  { label: "Explore", href: "/explore", icon: "explore" },
+  { label: "GO", href: "/go", icon: "go" },
+  { label: "Mayhem", href: "/mayhem", icon: "mayhem" },
+  { label: "Live", href: "/live", icon: "live" },
+  { label: "Support", href: "/support", icon: "support" },
+  { label: "Terminal", href: "/terminal", icon: "terminal" },
+  { label: "$PUMP", href: "/pump-token", icon: "pump", accent: true },
+  { label: "Create", href: "/create", icon: "create" },
+];

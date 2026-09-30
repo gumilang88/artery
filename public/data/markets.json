@@ -1,0 +1,348 @@
+[
+  {
+    "symbol": "BANKARC",
+    "name": "Bankarc",
+    "address": "0x48f62cC16DE032F78472d4bA6D1893B9729f912E",
+    "price": 3.67e-05,
+    "mcap": 37000,
+    "volume24": 19000,
+    "change24h": 1400,
+    "icon": "/argus-icons/0x48f62cc16de032f78472d4ba6d1893b9729f912e.jpg",
+    "holderCount": 130,
+    "liquidityUsdc": 11000,
+    "spark": [
+      0.1,
+      0.2,
+      0.35,
+      0.8,
+      1,
+      1
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "HOMER",
+    "name": "Homer",
+    "address": "0x11Df98265354f486f20ae74e79d0E1AB79A4AE05",
+    "price": 2.326e-05,
+    "mcap": 23262,
+    "volume24": 9200,
+    "change24h": 837.7,
+    "icon": "/argus-icons/0x11df98265354f486f20ae74e79d0e1ab79a4ae05.webp",
+    "holderCount": 94,
+    "liquidityUsdc": 7200,
+    "spark": [
+      0.1,
+      0.4,
+      0.2,
+      0.8,
+      1
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "ARCLOAK",
+    "name": "Arc Cloak",
+    "address": "0x797abf94A828776f082C56e33e5Ec432E1d27033",
+    "price": 2.009e-05,
+    "mcap": 20091,
+    "volume24": 7400,
+    "change24h": 709.86,
+    "icon": "/argus-icons/0x797abf94a828776f082c56e33e5ec432e1d27033.png",
+    "holderCount": 81,
+    "liquidityUsdc": 6500,
+    "spark": [
+      0.1,
+      0.15,
+      0.4,
+      0.75,
+      1
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "TERRA",
+    "name": "Terra",
+    "address": "0xB38F46851825dd9413687e62cE57A3f178d4Af84",
+    "price": 1.493e-05,
+    "mcap": 14930,
+    "volume24": 5100,
+    "change24h": 73.49,
+    "icon": "/argus-icons/0xb38f46851825dd9413687e62ce57a3f178d4af84.png",
+    "holderCount": 72,
+    "liquidityUsdc": 5800,
+    "spark": [
+      0.3,
+      0.4,
+      0.35,
+      0.6,
+      0.8
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "ARCDD",
+    "name": "Arc Digital Dollar",
+    "address": "0x8Dc7B0Ade2c3224874D413E0DE86757d0Fcd4038",
+    "price": 1.022e-05,
+    "mcap": 10221,
+    "volume24": 3900,
+    "change24h": 27.66,
+    "icon": "/argus-icons/0x8dc7b0ade2c3224874d413e0de86757d0fcd4038.png",
+    "holderCount": 61,
+    "liquidityUsdc": 4100,
+    "spark": [
+      0.5,
+      0.42,
+      0.65,
+      0.7,
+      0.83
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "MOMUS",
+    "name": "Momus",
+    "address": "0xda004b5dC9b37948d6ce39b265b9eBF34506d83A",
+    "price": 8.12e-06,
+    "mcap": 8120,
+    "volume24": 2900,
+    "change24h": -0.22,
+    "icon": "/argus-icons/0xda004b5dc9b37948d6ce39b265b9ebf34506d83a.png",
+    "holderCount": 57,
+    "liquidityUsdc": 3500,
+    "spark": [
+      0.8,
+      0.7,
+      0.72,
+      0.69,
+      0.7
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "PAY",
+    "name": "Pay",
+    "address": "0xf30dcb03CCF2BF15fF2103f5e18D7b4fDfa60962",
+    "price": 2.53e-06,
+    "mcap": 2530,
+    "volume24": 262,
+    "change24h": 2.1,
+    "icon": "/argus-icons/0xf30dcb03ccf2bf15ff2103f5e18d7b4fdfa60962.jpg",
+    "holderCount": 25,
+    "liquidityUsdc": 1200,
+    "spark": [
+      0.4,
+      0.45,
+      0.42,
+      0.52,
+      0.6
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "APEXIS",
+    "name": "Apexis",
+    "address": "0x59556888E8E2A94EbC69569F5E252648Ee6Fe64B",
+    "price": 2.96e-06,
+    "mcap": 2960,
+    "volume24": 190,
+    "change24h": -4.2,
+    "icon": "/argus-icons/0x59556888e8e2a94ebc69569f5e252648ee6fe64b.png",
+    "holderCount": 31,
+    "liquidityUsdc": 1400,
+    "spark": [
+      0.7,
+      0.62,
+      0.65,
+      0.58,
+      0.5
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "ARCANE",
+    "name": "Arcane",
+    "address": "0x918E535881BEc8035a8F1A5775C47DE4Ee5832C3",
+    "price": 6.61e-06,
+    "mcap": 6610,
+    "volume24": 710,
+    "change24h": 8.4,
+    "icon": "/argus-icons/0x918e535881bec8035a8f1a5775c47de4ee5832c3.jpg",
+    "holderCount": 48,
+    "liquidityUsdc": 2700,
+    "spark": [
+      0.3,
+      0.4,
+      0.38,
+      0.65,
+      0.72
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "DOLLA",
+    "name": "Dolla",
+    "address": "0x68ceF234271b858b4f43f5cEcd97479f4a9D789B",
+    "price": 7.69e-06,
+    "mcap": 7690,
+    "volume24": 840,
+    "change24h": 11.2,
+    "icon": "/argus-icons/0x68cef234271b858b4f43f5cecd97479f4a9d789b.png",
+    "holderCount": 53,
+    "liquidityUsdc": 3100,
+    "spark": [
+      0.2,
+      0.35,
+      0.5,
+      0.55,
+      0.8
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "ASTRA6",
+    "name": "Astra 6",
+    "address": "0x3DD5Cfc876F59e4Bc5b6e243A5FB5c15C434983a",
+    "price": 3.94e-06,
+    "mcap": 3940,
+    "volume24": 331,
+    "change24h": -6.3,
+    "icon": "/argus-icons/0x3dd5cfc876f59e4bc5b6e243a5fb5c15c434983a.png",
+    "holderCount": 29,
+    "liquidityUsdc": 1700,
+    "spark": [
+      0.7,
+      0.65,
+      0.7,
+      0.58,
+      0.51
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "S4",
+    "name": "S4",
+    "address": "0x1171F198FACA1E9C82F8DBa684C819D829276036",
+    "price": 2.51e-06,
+    "mcap": 2510,
+    "volume24": 145,
+    "change24h": 1.6,
+    "icon": "/argus-icons/0x1171f198faca1e9c82f8dba684c819d829276036.jpg",
+    "holderCount": 22,
+    "liquidityUsdc": 1100,
+    "spark": [
+      0.4,
+      0.42,
+      0.4,
+      0.46,
+      0.51
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "NDRAC",
+    "name": "NDRAC",
+    "address": "0x6f2a04a1623B6c31C2Bbd3f9943C96B36c9B9304",
+    "price": 2.48e-06,
+    "mcap": 2480,
+    "volume24": 126,
+    "change24h": -2.7,
+    "icon": "/argus-icons/0x6f2a04a1623b6c31c2bbd3f9943c96b36c9b9304.png",
+    "holderCount": 21,
+    "liquidityUsdc": 1050,
+    "spark": [
+      0.6,
+      0.55,
+      0.58,
+      0.5,
+      0.48
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "TRACE",
+    "name": "Trace",
+    "address": "0x7616bDB9aa3DA19830e01C3e41432c6811053664",
+    "price": 2.49e-06,
+    "mcap": 2490,
+    "volume24": 118,
+    "change24h": 4.3,
+    "icon": "/argus-icons/0x7616bdb9aa3da19830e01c3e41432c6811053664.jpg",
+    "holderCount": 24,
+    "liquidityUsdc": 1080,
+    "spark": [
+      0.3,
+      0.4,
+      0.36,
+      0.5,
+      0.57
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  },
+  {
+    "symbol": "BBR",
+    "name": "BBR",
+    "address": "0x38F3c102bD360c94Bc6254CD3803150B2D334eA8",
+    "price": 2.48e-06,
+    "mcap": 2480,
+    "volume24": 106,
+    "change24h": -1.1,
+    "icon": "/argus-icons/0x38f3c102bd360c94bc6254cd3803150b2d334ea8.png",
+    "holderCount": 20,
+    "liquidityUsdc": 1040,
+    "spark": [
+      0.5,
+      0.48,
+      0.52,
+      0.49,
+      0.47
+    ],
+    "topVersion": "v4",
+    "quoteSymbols": [
+      "USDC"
+    ]
+  }
+]

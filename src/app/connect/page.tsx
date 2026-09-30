@@ -1,0 +1,5 @@
+"use client";
+import Link from "next/link";
+import {useState} from "react";
+import {Mail,Wallet} from "lucide-react";
+export default function Connect(){const [email,setEmail]=useState("");return <main className="connect-page"><section className="connect-form"><div className="connect-inner"><span className="connect-logo">A</span><h1>Welcome to Artery</h1><p>Connect to access ARC markets and start trading</p>{["MetaMask","Rabby Wallet","Coinbase Wallet","WalletConnect"].map(w=><button key={w}><Wallet size={16}/><span>Continue with {w}</span></button>)}<div className="or"><span/>or<span/></div><label><Mail size={15}/><input value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address"/></label><button className="email-btn" disabled={!email.includes('@')}>Continue with Email</button><small>By continuing, you agree to our <Link href="/terms">Terms of Service</Link> and <Link href="/privacy">Privacy Policy</Link>.</small></div></section><section className="connect-art"><div className="connect-orb">ARC</div><div className="art-ring one"/><div className="art-ring two"/></section></main>}
