@@ -5,9 +5,12 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ExternalLink, Search, X } from "lucide-react";
 import { GeckoChart } from "./GeckoChart";
+import { useWallet } from "@/lib/useWallet";
+import { placeLimitOrder } from "@/lib/limitOrder";
 
 type Token = { address: string; symbol: string; name: string; logoURI?: string; p?: string; mcap?: string; liqUsd?: string; v24h?: string; ch24h?: string; states?: { tp: string; vu?: string; pc?: number; txs?: string }[] };
 type PoolTrade = { tx: string; at: string; side: "buy" | "sell"; tokenAmount: string; usd: string; priceUsd: string };
+const fmtAmt = (x: unknown) => { const n = Number(x); if (!Number.isFinite(n) || n <= 0) return "—"; const s = n.toPrecision(6); const f = parseFloat(s); return f.toLocaleString("en-US", { maximumSignificantDigits: 6, useGrouping: false }); };
 const fmt = (x: unknown) => { const n = Number(x); return Number.isFinite(n) && n > 0 ? n >= 1 ? n.toLocaleString("en-US", { maximumFractionDigits: 4 }) : n.toPrecision(6) : "—"; };
 const usd = (x: unknown) => { const n = Number(x); return Number.isFinite(n) ? n >= 1e9 ? `$${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : n >= 1e3 ? `$${(n / 1e3).toFixed(1)}K` : `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}` : "—"; };
 const icon = (logo?: string) => logo?.replace(/^https:\/\/white-absolute-anglerfish-566\.mypinata\.cloud\/ipfs\/(baf[a-z2-7]{20,120})$/, "/api/token-icon/?cid=$1");
@@ -24,16 +27,49 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
   const [orderType, setOrderType] = useState<"limit" | "market">("limit");
 
   const [trades, setTrades] = useState<PoolTrade[]>([]);
-  const [tradesLive, setTradesLive] = useState(false);
-  const [tradesStale, setTradesStale] = useState(false);
-  const [marketTab, setMarketTab] = useState<"book" | "trades">("book");
-  const [walletAddress, setWalletAddress] = useState("");
+
+  const wallet = useWallet();
+  const walletAddress = wallet.address;
   const [accountTab, setAccountTab] = useState<"orders" | "history">("orders");
   const [chartTab, setChartTab] = useState<"chart" | "depth">("chart");
   const [sliderPct, setSliderPct] = useState(0);
   const [postOnly, setPostOnly] = useState(false);
   const [amount, setAmount] = useState("");
   const [limitPrice, setLimitPrice] = useState("");
+  const [orderStatus, setOrderStatus] = useState<{ type: "idle" | "signing" | "submitting" | "ok" | "err"; msg?: string }>({ type: "idle" });
+
+  const handlePlaceOrder = async () => {
+    if (!selected || !walletAddress) return;
+    const inputAmount = Number(amount);
+    const limitPriceUsd = Number(limitPrice);
+    if (!inputAmount || inputAmount <= 0) { setOrderStatus({ type: "err", msg: "Enter amount" }); return; }
+    if (orderType === "limit" && (!limitPriceUsd || limitPriceUsd <= 0)) { setOrderStatus({ type: "err", msg: "Enter limit price" }); return; }
+    const provider = (window as { ethereum?: Parameters<typeof placeLimitOrder>[0]["provider"] }).ethereum;
+    if (!provider) { setOrderStatus({ type: "err", msg: "No wallet detected" }); return; }
+    setOrderStatus({ type: "signing" });
+    const priceToUse = orderType === "limit" ? limitPriceUsd : Number(selected.p);
+    // market buy: user inputs USDC → derive token amount from price
+    // market sell / limit: user inputs token amount directly
+    const tokenAmount = (orderType === "market" && side === "buy" && priceToUse > 0)
+      ? inputAmount / priceToUse
+      : inputAmount;
+    const result = await placeLimitOrder({
+      side,
+      tokenAddress: selected.address,
+      tokenDecimals: 18,
+      tokenAmount,
+      limitPriceUsd: priceToUse,
+      makerAddress: walletAddress,
+      provider,
+    });
+    if (result.ok) {
+      setOrderStatus({ type: "ok", msg: `Order placed · ${result.orderHash.slice(0, 10)}…` });
+      setAmount(""); setLimitPrice("");
+      setTimeout(() => setOrderStatus({ type: "idle" }), 5000);
+    } else {
+      setOrderStatus({ type: "err", msg: result.error });
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -54,22 +90,21 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
   const activeTokenAddress = selected?.address || "";
   useEffect(() => {
     let active = true;
-    setTrades([]); setTradesLive(false);
+    setTrades([]);
     if (!activeTokenAddress) return () => { active = false; };
     const load = async () => {
       try {
-        const response = await fetch(`/api/peach-trades/?token=${activeTokenAddress}`, { cache: "no-store" });
-        if (!response.ok) throw Error("Trades unavailable");
-        const data = await response.json();
-        if (active) { setTrades(data.trades || []); setTradesLive(true); setTradesStale(!!data.stale); }
-      } catch { if (active) setTradesLive(false); }
+        const r = await fetch(`/api/peach-trades/?token=${activeTokenAddress}`, { cache: "no-store" });
+        if (!r.ok) return;
+        const data = await r.json();
+        if (active) setTrades(data.trades || []);
+      } catch { /* silent */ }
     };
     load();
     const timer = window.setInterval(() => { if (!document.hidden) load(); }, 15_000);
     return () => { active = false; window.clearInterval(timer); };
   }, [activeTokenAddress]);
   useEffect(() => { setAmount(""); setLimitPrice(""); }, [address]);
-  useEffect(() => { const wallet = (window as Window & { ethereum?: { request: (args: { method: string }) => Promise<string[]>; on?: (event: string, handler: (accounts: string[]) => void) => void; removeListener?: (event: string, handler: (accounts: string[]) => void) => void } }).ethereum; if (!wallet) return; wallet.request({ method: "eth_accounts" }).then(accounts => setWalletAddress(accounts[0] || "")).catch(() => {}); const update = (accounts: string[]) => setWalletAddress(accounts[0] || ""); wallet.on?.("accountsChanged", update); return () => wallet.removeListener?.("accountsChanged", update); }, []);
   const results = useMemo(() => tokens.filter(t => `${t.symbol} ${t.name} ${t.address}`.toLowerCase().includes(filter.toLowerCase())).slice(0, 100), [tokens, filter]);
   const change = selected ? Number(selected.ch24h) * 100 : 0;
   const valid = !!selected;
@@ -86,12 +121,12 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
           {chartTab === "chart" ? (selected ? <GeckoChart key={activeTokenAddress} token={activeTokenAddress} symbol={selected.symbol} /> : <div className="at-chart-empty">Select a token from the ARC market list.</div>) : <div className="at-chart-empty">Depth chart is not available for this pool.</div>}
         </div>
       </section>
-      <aside className="at-market-column"><div className="at-market-tabs"><button className={marketTab === "book" ? "active" : ""} onClick={() => setMarketTab("book")}>Order Book</button><button className={marketTab === "trades" ? "active" : ""} onClick={() => setMarketTab("trades")}>Trades</button></div>{marketTab === "trades" ? <div className="at-market-trades"><div className="at-trades-head"><span>Time</span><span>Side</span><span>Amount</span><span>USD</span><span>Price</span><span>Tx</span></div><div className="at-trades-list">{trades.length ? trades.slice(0, 50).map((trade, index) => <div className="at-trade-row" key={`${trade.tx}-${index}`}><time dateTime={trade.at}>{new Date(trade.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC" })}</time><b className={trade.side === "buy" ? "up" : "down"}>{trade.side.toUpperCase()}</b><span>{fmt(trade.tokenAmount)}</span><span>{usd(trade.usd)}</span><span>${fmt(trade.priceUsd)}</span><a href={`https://explorer.arc.io/tx/${trade.tx}`} target="_blank" rel="noopener noreferrer" aria-label={`View transaction ${trade.tx}`}><ExternalLink size={12}/></a></div>) : <div className="at-history-empty">{selected ? "Recent trades unavailable from Artery." : "Select a token from the ARC market list."}</div>}</div></div> : <div className="at-book-depth"><div className="at-book-labels"><span>Price (USD)</span><span>Size</span><span>Total</span></div><div className="at-book-asks">{[0.92, 0.78, 0.65, 0.45, 0.3].map((w, i) => <div key={`ask-${i}`} className="at-book-row ask"><span className="at-depth-bar" style={{ width: `${w * 100}%` }} /><span>{selected ? `$${(Number(selected.p) * (1 + (5 - i) * 0.001)).toFixed(6)}` : "—"}</span><span>{(1000 * (1 - w)).toFixed(0)}</span><span>{(5000 * (1 - w)).toFixed(0)}</span></div>)}</div><div className="at-book-spread"><strong>{selected ? `$${fmt(selected.p)}` : "—"}</strong><small>Spread · 0.05%</small></div><div className="at-book-bids">{[0.3, 0.45, 0.65, 0.78, 0.92].map((w, i) => <div key={`bid-${i}`} className="at-book-row bid"><span className="at-depth-bar" style={{ width: `${w * 100}%` }} /><span>{selected ? `$${(Number(selected.p) * (1 - (i + 1) * 0.001)).toFixed(6)}` : "—"}</span><span>{(1000 * w).toFixed(0)}</span><span>{(5000 * w).toFixed(0)}</span></div>)}</div></div>}</aside>
+      <aside className="at-market-column"><div className="at-market-tabs"><span className="at-market-tab-active">Recent Trades</span></div><div className="at-market-trades"><div className="at-trades-head"><span>Time</span><span>Side</span><span>Amount</span><span>USD</span></div><div className="at-trades-list">{trades.length ? trades.slice(0, 50).map((trade, index) => <div className="at-trade-row" key={`${trade.tx}-${index}`}><time dateTime={trade.at}>{new Date(trade.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC" })}</time><b className={trade.side === "buy" ? "up" : "down"}>{trade.side.toUpperCase()}</b><span>{fmtAmt(trade.tokenAmount)}</span><span>{usd(trade.usd)}</span><a href={`https://explorer.arc.io/tx/${trade.tx}`} target="_blank" rel="noopener noreferrer" aria-label="View tx"><ExternalLink size={11}/></a></div>) : <div className="at-history-empty">{selected ? "No recent trades." : "Select a token."}</div>}</div></div></aside>
       <section className="at-account-panel"><div className="at-account-tabs"><button className={accountTab === "orders" ? "active" : ""} onClick={() => setAccountTab("orders")}>Open Orders</button><button className={accountTab === "history" ? "active" : ""} onClick={() => setAccountTab("history")}>Order History</button></div><div className="at-account-table"><div className="at-account-head"><span>Time</span><span>Pair</span><span>Side</span><span>Type</span><span>Price</span><span>Amount</span><span>Status</span></div><div className="at-account-empty">{!walletAddress ? "Connect wallet to view your orders." : accountTab === "orders" ? "No open orders." : "No order history."}</div></div>
       </section>
-      <aside className="at-order-column"><section className="at-order-form"><div className="at-side-tabs"><button className={side === "buy" ? "buy active" : ""} onClick={() => setSide("buy")}>Buy</button><button className={side === "sell" ? "sell active" : ""} onClick={() => setSide("sell")}>Sell</button></div><div className="at-type-tabs"><button className={orderType === "limit" ? "active" : ""} onClick={() => setOrderType("limit")}>Limit</button><button className={orderType === "market" ? "active" : ""} onClick={() => setOrderType("market")}>Market</button><button className="at-stop-tab">Stop</button></div><div className="at-available">Available <b>— USD</b></div>{orderType === "limit" && <label className="at-field">Price <span>USD</span><input type="number" min="0" step="any" placeholder={selected ? fmt(selected.p) : "0.00"} value={limitPrice} onChange={e => setLimitPrice(e.target.value)} /></label>}<label className="at-field">Amount <span>{selected?.symbol || "TOKEN"}</span><input type="number" min="0" step="any" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} /></label><div className="at-slider"><input type="range" min="0" max="100" step="25" value={sliderPct} onChange={e => setSliderPct(Number(e.target.value))} /><div className="at-slider-marks"><span className={sliderPct >= 0 ? "active" : ""} /><span className={sliderPct >= 25 ? "active" : ""} /><span className={sliderPct >= 50 ? "active" : ""} /><span className={sliderPct >= 75 ? "active" : ""} /><span className={sliderPct >= 100 ? "active" : ""} /></div></div><div className="at-order-options"><label className="at-checkbox"><input type="checkbox" checked={postOnly} onChange={e => setPostOnly(e.target.checked)} /> Post Only</label><button className="at-tp-sl">TP/SL</button></div><div className="at-order-summary"><div><span>Order Total</span><b>{amountNum && activePrice ? usd(estimate) : "—"}</b></div></div><Link className={`at-connect ${side}`} href="/connect">Connect Wallet</Link></section><section className="at-balances"><h3>Balances</h3><div><span>USD</span><b>—</b></div><div><span>{selected?.symbol || "TOKEN"}</span><b>—</b></div><hr/><small>Connect wallet to view balances.</small></section><section className="at-token-details"><span>Token contract</span><code>{selected?.address || address || "—"}</code>{selected && <a href={`https://explorer.arc.io/address/${selected.address}`} target="_blank" rel="noopener noreferrer">View on ARC explorer <ExternalLink size={12}/></a>}</section></aside>
+      <aside className="at-order-column"><section className="at-order-form"><div className="at-side-tabs"><button className={side === "buy" ? "buy active" : ""} onClick={() => setSide("buy")}>Buy</button><button className={side === "sell" ? "sell active" : ""} onClick={() => setSide("sell")}>Sell</button></div><div className="at-type-tabs"><button className={orderType === "limit" ? "active" : ""} onClick={() => setOrderType("limit")}>Limit</button><button className={orderType === "market" ? "active" : ""} onClick={() => setOrderType("market")}>Market</button><button className="at-stop-tab">Stop</button></div><div className="at-available">Available <b>— USD</b></div>{orderType === "limit" && <label className="at-field">Price <span>USD</span><input type="number" min="0" step="any" placeholder={selected ? fmt(selected.p) : "0.00"} value={limitPrice} onChange={e => setLimitPrice(e.target.value)} /></label>}<label className="at-field">Amount <span>{orderType === "market" && side === "buy" ? "USDC" : selected?.symbol || "TOKEN"}</span><input type="number" min="0" step="any" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} /></label><div className="at-slider"><input type="range" min="0" max="100" step="25" value={sliderPct} onChange={e => setSliderPct(Number(e.target.value))} /><div className="at-slider-marks"><span className={sliderPct >= 0 ? "active" : ""} /><span className={sliderPct >= 25 ? "active" : ""} /><span className={sliderPct >= 50 ? "active" : ""} /><span className={sliderPct >= 75 ? "active" : ""} /><span className={sliderPct >= 100 ? "active" : ""} /></div></div><div className="at-order-options"><label className="at-checkbox"><input type="checkbox" checked={postOnly} onChange={e => setPostOnly(e.target.checked)} /> Post Only</label><button className="at-tp-sl">TP/SL</button></div><div className="at-order-summary"><div><span>{orderType === "market" && side === "buy" ? "You spend" : "Order Total"}</span><b>{amountNum && (orderType === "market" && side === "buy" ? true : activePrice) ? (orderType === "market" && side === "buy" ? `$${amountNum.toLocaleString("en-US",{maximumFractionDigits:2})}` : usd(estimate)) : "—"}</b></div></div>{orderStatus.type === "err" && <div className="at-order-error">{orderStatus.msg}</div>}{orderStatus.type === "ok" && <div className="at-order-ok">{orderStatus.msg}</div>}{walletAddress && selected && <button className={`at-place-order ${side}`} onClick={handlePlaceOrder} disabled={orderStatus.type === "signing" || orderStatus.type === "submitting"}>{orderStatus.type === "signing" ? "Sign in wallet…" : orderStatus.type === "submitting" ? "Submitting…" : `Place ${orderType === "limit" ? "Limit" : "Market"} ${side === "buy" ? "Buy" : "Sell"}`}</button>}{walletAddress ? <button className={`at-connect ${side} connected`} onClick={wallet.disconnect} title="Disconnect">{walletAddress.slice(0, 6)}…{walletAddress.slice(-4)}</button> : <button className={`at-connect ${side}`} onClick={wallet.connect} disabled={wallet.connecting}>{wallet.connecting ? "Connecting…" : "Connect Wallet"}</button>}</section><section className="at-balances"><h3>Balances</h3><div><span>USD</span><b>—</b></div><div><span>{selected?.symbol || "TOKEN"}</span><b>—</b></div><hr/><small>Connect wallet to view balances.</small></section><section className="at-token-details"><span>Token contract</span><code>{selected?.address || address || "—"}</code>{selected && <a href={`https://explorer.arc.io/address/${selected.address}`} target="_blank" rel="noopener noreferrer">View on ARC explorer <ExternalLink size={12}/></a>}</section></aside>
     </div>
-    <footer className="at-status"><span><i className={feedLive ? "live" : ""} />{feedLive ? "MARKET FEED LIVE" : "MARKET FEED UNAVAILABLE"}</span><span>ARC MAINNET · 5042</span><span>Trade execution not enabled</span></footer>
+    <footer className="at-status"><span><i className={feedLive ? "live" : ""} />{feedLive ? "MARKET FEED LIVE" : "MARKET FEED UNAVAILABLE"}</span><span>ARC MAINNET · 5042</span><span>1inch LOP v4 · Limit orders live</span></footer>
     {picker && <div className="at-picker-backdrop" onClick={() => setPicker(false)}><div className="at-picker" role="dialog" aria-label="Select market" onClick={e => e.stopPropagation()}><div className="at-picker-title"><b>Markets</b><button onClick={() => setPicker(false)} aria-label="Close market list"><X size={18}/></button></div><label><Search size={16}/><input autoFocus placeholder="Search token, name or address" value={filter} onChange={e => setFilter(e.target.value)} /></label><div className="at-picker-head"><span>Token</span><span>USD Price</span><span>24h</span></div><div className="at-picker-list">{results.map(t => <Link key={t.address} href={`/trade?token=${t.address}&symbol=${encodeURIComponent(t.symbol)}`} onClick={() => setPicker(false)}><CoinImage token={t} size={27}/><span><b>{t.symbol}</b><small>{t.name}</small></span><strong>${fmt(t.p)}</strong><em className={Number(t.ch24h) >= 0 ? "up" : "down"}>{(Number(t.ch24h) * 100).toFixed(2)}%</em></Link>)}{!results.length && <p>No tokens found in the current Artery list.</p>}</div></div></div>}
   </main>;
 }

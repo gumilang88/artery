@@ -1,22 +1,11 @@
 import type { SVGProps } from "react";
 
-type P = SVGProps<SVGSVGElement>;
+type P = SVGProps<SVGSVGElement> & { width?: number; height?: number };
 
-export function LogoIcon(props: P) {
+export function LogoIcon({ width = 32, height = 32 }: P) {
   return (
-    <svg width="32" height="32" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-      <path
-        d="M21.8855 184.247C-2.01603 162.076 -3.41853 124.726 18.753 100.824L94.7609 18.8855C116.932 -5.01605 154.282 -6.41855 178.184 15.7529C202.085 37.9244 203.488 75.274 181.316 99.1756L105.308 181.115C83.1367 205.016 45.7871 206.419 21.8855 184.247Z"
-        fill="#FAFAFA"
-      />
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M18.753 100.824C-3.41853 124.726 -2.01603 162.076 21.8855 184.247C45.7871 206.419 83.1367 205.016 105.308 181.115L181.316 99.1756C203.488 75.274 202.085 37.9244 178.184 15.7529C154.282 -6.41855 116.932 -5.01605 94.7609 18.8855L18.753 100.824Z"
-        fill="#86EFAC"
-        fillOpacity="0.18"
-      />
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/artery-logo-64.png" alt="Artery" width={width} height={height} style={{ objectFit: "contain" }} />
   );
 }
 

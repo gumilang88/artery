@@ -19,13 +19,22 @@ export function GeckoChart({ token, symbol }: { token: string; symbol: string })
     if (!host.current) return;
     const instance = createChart(host.current, {
       width: host.current.clientWidth, height: host.current.clientHeight,
-      layout: { background: { color: "#191c21" }, textColor: "#929aa5", fontFamily: "Inter, Arial, sans-serif", fontSize: 11 },
-      grid: { vertLines: { color: "#262a30" }, horzLines: { color: "#262a30" } },
-      rightPriceScale: { borderColor: "#333941", minimumWidth: 84, scaleMargins: { top: 0.07, bottom: 0.23 } },
-      timeScale: { borderColor: "#333941", timeVisible: true, secondsVisible: false, rightOffset: 4 },
-      crosshair: { vertLine: { color: "#737c89" }, horzLine: { color: "#737c89" } },
+      layout: { background: { color: "#080b10" }, textColor: "#8896ae", fontFamily: "Inter, Arial, sans-serif", fontSize: 11 },
+      grid: { vertLines: { color: "#141c26" }, horzLines: { color: "#141c26" } },
+      rightPriceScale: { borderColor: "#1f2a38", minimumWidth: 84, scaleMargins: { top: 0.07, bottom: 0.23 } },
+      timeScale: { borderColor: "#1f2a38", timeVisible: true, secondsVisible: false, rightOffset: 4 },
+      crosshair: { vertLine: { color: "#3a4a60", width: 1 }, horzLine: { color: "#3a4a60", width: 1 } },
     });
-    const candles = instance.addSeries(CandlestickSeries, { upColor: "#00f5a0", downColor: "#ff3f5f", borderVisible: true, borderUpColor: "#62ffc3", borderDownColor: "#ff8296", wickUpColor: "#62ffc3", wickDownColor: "#ff8296", priceFormat: { type: "price", precision: 8, minMove: 0.00000001 } });
+    const candles = instance.addSeries(CandlestickSeries, {
+      upColor: "#22d48a",
+      downColor: "#f03c5a",
+      borderVisible: true,
+      borderUpColor: "#22d48a",
+      borderDownColor: "#f03c5a",
+      wickUpColor: "#22d48a",
+      wickDownColor: "#f03c5a",
+      priceFormat: { type: "price", precision: 8, minMove: 0.00000001 },
+    });
     const volumes = instance.addSeries(HistogramSeries, { priceFormat: { type: "volume" }, priceScaleId: "" });
     volumes.priceScale().applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
     chart.current = instance; priceSeries.current = candles; volumeSeries.current = volumes;
@@ -50,7 +59,7 @@ export function GeckoChart({ token, symbol }: { token: string; symbol: string })
         const unique = rows.filter((row, index) => index === 0 || row[0] !== rows[index - 1][0]);
         if (!unique.length) { setStatus("empty"); return; }
         const candleData: CandlestickData<Time>[] = unique.map(row => ({ time: row[0] as Time, open: row[1], high: row[2], low: row[3], close: row[4] }));
-        const volumeData: HistogramData<Time>[] = unique.map(row => ({ time: row[0] as Time, value: row[5], color: row[4] >= row[1] ? "#00f5a088" : "#ff3f5f88" }));
+        const volumeData: HistogramData<Time>[] = unique.map(row => ({ time: row[0] as Time, value: row[5], color: row[4] >= row[1] ? "#22d48a55" : "#f03c5a55" }));
         priceSeries.current?.setData(candleData);
         volumeSeries.current?.setData(volumeData);
         chart.current?.timeScale().fitContent();

@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const url = new URL("https://api.peach.ag/arc/v1/arc/pro/v2/coin_list");
-    Object.entries({ tag: "trending", date_type: "5m", limit: "100", offset: "0", sort_field: "rank", desc: "false" })
+    Object.entries({ tag: "trending", date_type: "24h", limit: "100", offset: "0", sort_field: "rank", desc: "false" })
       .forEach(([key, value]) => url.searchParams.set(key, value));
     const response = await fetch(url, { cache: "no-store", headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(12000) });
     if (!response.ok) return NextResponse.json({ error: `Peach upstream ${response.status}` }, { status: 502 });

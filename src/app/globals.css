@@ -3,16 +3,16 @@
 /* ── Artery Design System — Polyester-style dark trading terminal ── */
 
 :root {
-  --bg: #0a0c0f;
-  --panel: #12141a;
+  --bg: #080b10;
+  --panel: #0e1118;
   --panel2: #161920;
-  --line: #1e2128;
-  --muted: #6b7280;
+  --line: #1f2430;
+  --muted: #64728a;
   --text: #f1f3f5;
-  --pink: #fa3071;
-  --green: #41cfa2;
-  --red: #f27585;
-  --blue: #38cfff;
+  --pink: #e8356d;
+  --green: #2ecc8e;
+  --red: #e8445a;
+  --blue: #3db8e8;
 }
 
 * { box-sizing: border-box; }
@@ -99,7 +99,7 @@ button, input { font: inherit; }
   border-radius: 5px;
   font-size: 11px;
   font-weight: 500;
-  color: #6b7280;
+  color: #64728a;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   transition: color 0.18s, background 0.18s;
@@ -130,7 +130,7 @@ button, input { font: inherit; }
   width: 200px;
   height: 34px;
   border: 1px solid var(--line);
-  background: #12141a;
+  background: #0e1118;
   border-radius: 18px;
   color: #ddd;
   padding: 0 14px;
@@ -145,7 +145,7 @@ button, input { font: inherit; }
 .btn {
   height: 34px;
   border: 1px solid var(--line);
-  background: #12141a;
+  background: #0e1118;
   color: #c0c5ce;
   border-radius: 6px;
   padding: 0 13px;
@@ -176,8 +176,8 @@ button, input { font: inherit; }
   color: #fff;
 }
 .btn.primary:hover {
-  background: #e02865;
-  border-color: #e02865;
+  background: #c8245a;
+  border-color: #c8245a;
 }
 
 /* ── Hero (base for pages) ── */
@@ -187,7 +187,7 @@ button, input { font: inherit; }
   position: relative;
   overflow: hidden;
   padding: 88px 24px;
-  background: radial-gradient(circle at 35% 40%, #12141a 0, transparent 42%), linear-gradient(#0a0c0f, #0d0f13);
+  background: radial-gradient(circle at 35% 40%, #0e1118 0, transparent 42%), linear-gradient(#080b10, #0d0f13);
 }
 .hero h1 {
   font-size: 52px;
@@ -196,7 +196,7 @@ button, input { font: inherit; }
   font-weight: 500;
   letter-spacing: -0.04em;
 }
-.hero p { margin: 0; color: #6b7280; }
+.hero p { margin: 0; color: #64728a; }
 
 /* ── Balls / Orbs ── */
 .balls {
@@ -221,7 +221,7 @@ button, input { font: inherit; }
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--c) 80%, #fff 25%), var(--c) 50%, #0a0c0f 95%);
+  background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--c) 80%, #fff 25%), var(--c) 50%, #080b10 95%);
   box-shadow: inset -8px -10px 16px rgba(0,0,0,0.5), inset 6px 6px 12px rgba(255,255,255,0.12), 0 10px 30px rgba(0,0,0,0.5);
 }
 
@@ -449,7 +449,7 @@ button, input { font: inherit; }
 }
 
 .skeleton {
-  background: linear-gradient(90deg, #12141a 0%, #1e2128 40%, #12141a 80%);
+  background: linear-gradient(90deg, #0e1118 0%, #1f2430 40%, #0e1118 80%);
   background-size: 200% 100%;
   animation: shimmer 1.8s ease-in-out infinite;
   border-radius: 4px;

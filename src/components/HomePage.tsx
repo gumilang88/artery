@@ -32,7 +32,7 @@ import {
   ShieldCheck,
   Wallet,
 } from "lucide-react";
-type PeachToken = { address: string; symbol: string; name: string; logoURI?: string; p?: string; v24h?: string; ch24h?: string; mcap?: string; liqUsd?: string; states?: { tp: string; vu?: string }[] };
+type PeachToken = { address: string; symbol: string; name: string; logoURI?: string; p?: string; v24h?: string; ch24h?: string; mcap?: string; liqUsd?: string; states?: { tp: string; vu?: string; pc?: string }[] };
 const fmtMoney = (v: number) => v >= 1e6 ? `$${(v / 1e6).toFixed(2)}M` : v >= 1e3 ? `$${(v / 1e3).toFixed(1)}K` : `$${v.toFixed(2)}`;
 const fmtPrice = (v: number) => v > 0 ? `$${v >= 1 ? v.toLocaleString("en-US", { maximumFractionDigits: 4 }) : v.toPrecision(5)}` : "—";
 const fmtChange = (v: number) => `${v > 0 ? "+" : ""}${(v * 100).toFixed(2)}%`;
@@ -40,8 +40,8 @@ function usePeachMarkets() {
   const [tokens, setTokens] = useState<PeachToken[]>([]);
   useEffect(() => {
     let active = true;
-    const load = async () => { try { const r = await fetch("/api/peach/", { cache: "no-store" }); if (!r.ok) return; const j = await r.json(); if (active && Array.isArray(j.tokens)) setTokens(j.tokens); } catch {} };
-    load(); const timer = window.setInterval(load, 15_000);
+    const load = async () => { try { const r = await fetch("/api/peach/", { cache: "no-store" }); if (!r.ok) return; const j = await r.json(); if (active && Array.isArray(j.tokens)) { const vol = (t: PeachToken) => Number(t.states?.find(s => s.tp === "24h")?.vu ?? t.v24h ?? 0); setTokens([...j.tokens].sort((a, b) => vol(b) - vol(a))); } } catch {} };
+    load(); const timer = window.setInterval(load, 5_000);
     return () => { active = false; window.clearInterval(timer); };
   }, []);
   return tokens;
@@ -60,7 +60,7 @@ const featureCards = [
 
 const faq = [
   ["What is Artery?", "Artery is an ARC market interface showing tokens from Artery's ARC terminal."],
-  ["Where do the tokens come from?", "The list reads Artery's ARC terminal feed with the 5m timeframe. If the source is unavailable, Artery shows an unavailable state rather than a stale list."],
+  ["Where do the tokens come from?", "The list reads Artery's ARC terminal feed with the 24h timeframe. If the source is unavailable, Artery shows an unavailable state rather than a stale list."],
   ["Does Artery custody funds?", "The current interface displays market data and a trading preview. Onchain execution has not been enabled."],
   ["Why can two tokens share a symbol?", "Symbols are display labels. Artery identifies markets by contract address, so duplicate symbols remain separate."],
   ["What do the prices represent?", "Prices shown in the market list are Artery's USD reference prices. The trading interface remains a preview, not an executable quote."],
@@ -79,13 +79,16 @@ function TokenMark({ src, symbol, size = 28 }: { src?: string; symbol: string; s
 
 function MiniMarkets({ tokens }: { tokens: PeachToken[] }) {
   return <div className="hm-market-panel">
-    <div className="hm-panel-tabs"><span className="is-active">Trending</span><span>Volume</span><span>ARC · 5M</span></div>
-    <div className="hm-table-head"><span>Token</span><span>Price</span><span>24h</span><span>5m Vol</span></div>
-    {tokens.slice(0, 8).map(token => <Link key={token.address} href={`/trade?token=${token.address}&symbol=${encodeURIComponent(token.symbol)}`} className="hm-market-row">
+    <div className="hm-panel-tabs"><span className="is-active">Trending</span><span>Volume</span><span>ARC · 24H</span></div>
+    <div className="hm-table-head"><span>Token</span><span>Price</span><span>24h</span><span>24h Vol</span></div>
+    {tokens.slice(0, 8).map(token => {
+      const s24 = token.states?.find(s => s.tp === "24h");
+      return <Link key={token.address} href={`/trade?token=${token.address}&symbol=${encodeURIComponent(token.symbol)}`} className="hm-market-row">
       <span className="hm-market-pair"><TokenMark src={token.logoURI} symbol={token.symbol} /><span><b>{token.symbol}</b><small>{token.name}</small></span></span>
-      <span>{fmtPrice(Number(token.p))}</span><span className={Number(token.ch24h) >= 0 ? "up" : "down"}>{fmtChange(Number(token.ch24h))}</span>
-      <span>{fmtMoney(Number(token.states?.find(s => s.tp === "5m")?.vu || 0))}</span>
-    </Link>)}
+      <span>{fmtPrice(Number(token.p))}</span><span className={Number(s24?.pc ?? token.ch24h ?? 0) >= 0 ? "up" : "down"}>{fmtChange(Number(s24?.pc ?? token.ch24h ?? 0))}</span>
+      <span>{fmtMoney(Number(s24?.vu ?? token.v24h ?? 0))}</span>
+    </Link>;
+    })}
     {!tokens.length && <div className="hm-market-row">Waiting for ARC market data</div>}
   </div>;
 }
@@ -115,7 +118,7 @@ function TradingTerminal({ tokens }: { tokens: PeachToken[] }) {
           <span className="hm-live">INTERFACE PREVIEW</span>
         </div>
         <div className="hm-terminal-tools">
-          <span>Chart</span><span>1m</span><span>5m</span><b>1h</b><span>4h</span><span>1D</span><span className="push">Indicators</span><span>⋯</span>
+          <span>Chart</span><span>1m</span><b>24H</b><span>1h</span><span>4h</span><span>1D</span><span className="push">Indicators</span><span>⋯</span>
         </div>
         <div className="hm-terminal-body">
           <div className="hm-chart">
@@ -127,7 +130,7 @@ function TradingTerminal({ tokens }: { tokens: PeachToken[] }) {
           </div>
           <div className="hm-book">
             <div className="hm-book-tabs"><b>Market Details</b></div>
-            <div className="hm-book-head"><span>Artery · ARC</span><span>5M</span></div>
+            <div className="hm-book-head"><span>Artery · ARC</span><span>24H</span></div>
             <div className="hm-book-metric"><span>Last price</span><strong>{market ? fmtPrice(Number(market.p)) : "—"}</strong></div>
             <div className="hm-book-metric"><span>24h volume</span><strong>{market ? fmtMoney(Number(market.v24h)) : "—"}</strong></div>
             <div className="hm-book-metric"><span>Liquidity</span><strong>{market ? fmtMoney(Number(market.liqUsd)) : "—"}</strong></div>
@@ -197,7 +200,7 @@ export function HomePage() {
       <section ref={ref_market} className="home-split market-home reveal">
         <div className="home-section-copy">
           <span className="hm-section-label">EXPLORE SPOT MARKETS</span>
-          <h2>Discover what's trading<br />across ARC.</h2>
+          <h2>Discover what&apos;s trading<br />across ARC.</h2>
           <p>Real-time prices, 24h volume, liquidity depth, and market movement — all in one view.</p>
           <Link href="/markets/spot">View All Markets <ArrowRight size={14} /></Link>
           <div className="home-stats"><b>24H<small>Volume tracking</small></b><b>100+<small>Active pairs</small></b></div>
@@ -216,7 +219,7 @@ export function HomePage() {
             <span><Route size={17} /> Market feed shown</span>
             <span><ExternalLink size={17} /> ARC explorer ready</span>
           </div>
-          <div className="home-stats"><b>0x…<small>Contract-keyed markets</small></b><b>5m<small>ARC market timeframe</small></b></div>
+          <div className="home-stats"><b>0x…<small>Contract-keyed markets</small></b><b>24h<small>ARC market timeframe</small></b></div>
         </div>
         <div className="hm-address-visual">
           <div className="hm-address-top"><span className="hm-token-mark large">{peachTokens[0]?.symbol.slice(0, 2) || "AR"}</span><div><b>{peachTokens[0]?.symbol || "ARC"}</b><small>{peachTokens[0]?.name || "ARC market"}</small></div><em>{peachTokens.length ? "LIVE" : "WAITING"}</em></div>
