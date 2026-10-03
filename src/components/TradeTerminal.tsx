@@ -7,6 +7,9 @@ import { ChevronDown, ExternalLink, Search, X } from "lucide-react";
 import { GeckoChart } from "./GeckoChart";
 import { useWallet } from "@/lib/useWallet";
 import { placeLimitOrder, marketSwap } from "@/lib/limitOrder";
+import { openOrdersByMaker } from "@/lib/oneinch";
+import type { RawOrder } from "@/lib/accountOrders.mjs";
+import { classifyOrders, orderRows } from "@/lib/accountOrders.mjs";
 
 type Token = { address: string; symbol: string; name: string; logoURI?: string; p?: string; mcap?: string; liqUsd?: string; v24h?: string; ch24h?: string; states?: { tp: string; vu?: string; pc?: number; txs?: string }[] };
 type PoolTrade = { tx: string; at: string; side: "buy" | "sell"; tokenAmount: string; usd: string; priceUsd: string };
@@ -31,6 +34,10 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
   const wallet = useWallet();
   const walletAddress = wallet.address;
   const [accountTab, setAccountTab] = useState<"orders" | "history" | "trades" | "balances">("orders");
+  const [openOrders, setOpenOrders] = useState<RawOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [ordersRefresh, setOrdersRefresh] = useState(0);
   const [chartTab, setChartTab] = useState<"chart" | "depth">("chart");
   const [sliderPct, setSliderPct] = useState(0);
   const [postOnly, setPostOnly] = useState(false);
@@ -93,6 +100,7 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
       provider,
     });
     if (result.ok) {
+      setOrdersRefresh(n => n + 1);
       setOrderStatus({ type: "ok", msg: `Order placed · ${result.hash.slice(0, 10)}…` });
       setAmount(""); setLimitPrice("");
       setTimeout(() => setOrderStatus({ type: "idle" }), 5000);
@@ -118,6 +126,22 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
   }, []);
   const selected = tokens.find(t => t.address.toLowerCase() === address.toLowerCase()) || (!address ? tokens[0] : undefined);
   const activeTokenAddress = selected?.address || "";
+  useEffect(() => {
+    let active = true;
+    if (!walletAddress) return () => { active = false; };
+    const load = async () => {
+      setOrdersLoading(true);
+      try {
+        const rows = await openOrdersByMaker(walletAddress);
+        if (active) { setOpenOrders(classifyOrders(rows, walletAddress)); setOrdersError(null); }
+      } catch (error) {
+        if (active) setOrdersError(error instanceof Error ? error.message : "Order feed unavailable");
+      } finally { if (active) setOrdersLoading(false); }
+    };
+    load();
+    const timer = window.setInterval(() => { if (!document.hidden) load(); }, 15_000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [walletAddress, ordersRefresh]);
   useEffect(() => {
     let active = true;
     setTrades([]);
@@ -194,6 +218,7 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
   }, [sliderPct, side, tokenBalance, usdcBalance, tokenDecimals]);
 
   const displayTokenBalance = tokenBalance !== null ? Number(tokenBalance) / Math.pow(10, tokenDecimals) : null;  const results = useMemo(() => tokens.filter(t => `${t.symbol} ${t.name} ${t.address}`.toLowerCase().includes(filter.toLowerCase())).slice(0, 100), [tokens, filter]);
+  const visibleOrders = orderRows(openOrders, tokens, activeTokenAddress);
   const change = selected ? Number(selected.ch24h) * 100 : 0;
   const valid = !!selected;
   const activePrice = Number(limitPrice) > 0 && orderType === "limit" ? Number(limitPrice) : Number(selected?.p);
@@ -210,7 +235,8 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
         </div>
       </section>
       <aside className="at-market-column"><div className="at-market-tabs"><span className="at-market-tab-active">Recent Trades</span></div><div className="at-market-trades"><div className="at-trades-head"><span>Time</span><span>Side</span><span>Amount</span><span>USD</span></div><div className="at-trades-list">{trades.length ? trades.slice(0, 50).map((trade, index) => <div className="at-trade-row" key={`${trade.tx}-${index}`}><time dateTime={trade.at}>{new Date(trade.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC" })}</time><b className={trade.side === "buy" ? "up" : "down"}>{trade.side.toUpperCase()}</b><span>{fmtAmt(trade.tokenAmount)}</span><span>{usd(trade.usd)}</span><a href={`https://explorer.arc.io/tx/${trade.tx}`} target="_blank" rel="noopener noreferrer" aria-label="View tx"><ExternalLink size={11}/></a></div>) : <div className="at-history-empty">{selected ? "No recent trades." : "Select a token."}</div>}</div></div></aside>
-      <section className="at-account-panel"><div className="at-account-tabs"><button className={accountTab === "orders" ? "active" : ""} onClick={() => setAccountTab("orders")}>Open Orders</button><button className={accountTab === "history" ? "active" : ""} onClick={() => setAccountTab("history")}>Order History</button><button className={accountTab === "trades" ? "active" : ""} onClick={() => setAccountTab("trades")}>Trade History</button><button className={accountTab === "balances" ? "active" : ""} onClick={() => setAccountTab("balances")}>Balances</button></div><div className="at-account-table"><div className="at-account-head"><span>Time</span><span>Pair</span><span>Side</span><span>Type</span><span>Price</span><span>Amount</span><span>Status</span></div><div className="at-account-empty">{!walletAddress ? "Connect wallet to view your account data." : accountTab === "orders" ? "No open orders." : accountTab === "history" ? "No order history." : accountTab === "trades" ? "No trade history." : <div className="at-account-balances"><b>USDC</b><span>{displayUsdcBalance !== null ? fmtAmt(displayUsdcBalance) : "—"}</span><b>{selected?.symbol || "TOKEN"}</b><span>{displayTokenBalance !== null ? fmtAmt(displayTokenBalance) : "—"}</span></div>}</div></div>
+      <section className="at-account-panel"><div className="at-account-tabs"><button className={accountTab === "orders" ? "active" : ""} onClick={() => setAccountTab("orders")}>Open Orders</button><button className={accountTab === "history" ? "active" : ""} onClick={() => setAccountTab("history")}>Order History</button><button className={accountTab === "trades" ? "active" : ""} onClick={() => setAccountTab("trades")}>Trade History</button><button className={accountTab === "balances" ? "active" : ""} onClick={() => setAccountTab("balances")}>Balances</button></div>
+        <div className="at-account-table">{accountTab === "balances" ? <div className="at-account-balances"><b>USDC</b><span>{walletAddress ? displayUsdcBalance !== null ? fmtAmt(displayUsdcBalance) : "Loading…" : "Connect wallet"}</span><b>{selected?.symbol || "TOKEN"}</b><span>{walletAddress ? displayTokenBalance !== null ? fmtAmt(displayTokenBalance) : "Loading…" : "Connect wallet"}</span></div> : accountTab === "orders" ? <><div className="at-account-head"><span>Opened</span><span>Pair</span><span>Side</span><span>Type</span><span>Price</span><span>Amount</span><span>Status</span></div>{!walletAddress ? <div className="at-account-empty">Connect wallet to view open orders.</div> : ordersError ? <div className="at-account-empty">Order feed unavailable: {ordersError}</div> : ordersLoading && !openOrders.length ? <div className="at-account-empty">Loading open orders…</div> : visibleOrders.length ? visibleOrders.map(row => <div className="at-account-data" key={row.orderHash}><span>{new Date(row.at).toLocaleString("en-US", {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span><span>{row.symbol}/USDC</span><b className={row.side === "BUY" ? "up" : "down"}>{row.side}</b><span>Limit</span><span>${row.price}</span><span>{row.amount}</span><span><a href={`https://explorer.arc.io/search?q=${row.orderHash}`} target="_blank" rel="noopener noreferrer">Open</a></span></div>) : <div className="at-account-empty">No open orders for this pair.</div>}</> : <div className="at-account-empty">{!walletAddress ? "Connect wallet to view account activity." : accountTab === "history" ? "Order history isn't indexed yet; open orders above are live." : "Wallet trade history isn't indexed yet; Recent Trades are public pool trades."}</div>}</div>
       </section>
       <aside className="at-order-column"><section className="at-order-form"><div className="at-side-tabs"><button className={side === "buy" ? "buy active" : ""} onClick={() => setSide("buy")}>Buy</button><button className={side === "sell" ? "sell active" : ""} onClick={() => setSide("sell")}>Sell</button></div><div className="at-type-tabs"><button className={orderType === "limit" ? "active" : ""} onClick={() => setOrderType("limit")}>Limit</button><button className={orderType === "market" ? "active" : ""} onClick={() => setOrderType("market")}>Market</button><button className="at-stop-tab">Stop</button></div><div className="at-available">Available <b>{side === "sell" ? (displayTokenBalance !== null ? `${fmtAmt(displayTokenBalance)} ${selected?.symbol || "TOKEN"}` : "—") : (displayUsdcBalance !== null ? `${fmtAmt(displayUsdcBalance)} USDC` : "—")}</b>{side === "buy" && <button type="button" className="at-max-btn" onClick={handleMax}>Max</button>}{side === "sell" && <button type="button" className="at-max-btn" onClick={handleMax}>Max</button>}</div>{orderType === "limit" && <label className="at-field">Price <span>USD</span><input type="number" min="0" step="any" placeholder={selected ? fmt(selected.p) : "0.00"} value={limitPrice} onChange={e => setLimitPrice(e.target.value)} /></label>}<label className="at-field">Amount <span>{side === "buy" ? "USDC" : selected?.symbol || "TOKEN"}</span><input type="number" min="0" step="any" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} /></label><div className="at-slider"><input type="range" min="0" max="100" step="25" value={sliderPct} onChange={e => setSliderPct(Number(e.target.value))} /><div className="at-slider-marks"><span className={sliderPct >= 0 ? "active" : ""} /><span className={sliderPct >= 25 ? "active" : ""} /><span className={sliderPct >= 50 ? "active" : ""} /><span className={sliderPct >= 75 ? "active" : ""} /><span className={sliderPct >= 100 ? "active" : ""} /></div></div><div className="at-order-options"><label className="at-checkbox"><input type="checkbox" checked={postOnly} onChange={e => setPostOnly(e.target.checked)} /> Post Only</label><button className="at-tp-sl">TP/SL</button></div><div className="at-order-summary"><div><span>{orderType === "market" && side === "buy" ? "You spend" : "Order Total"}</span><b>{amountNum && (orderType === "market" && side === "buy" ? true : activePrice) ? (orderType === "market" && side === "buy" ? `$${amountNum.toLocaleString("en-US",{maximumFractionDigits:2})}` : usd(estimate)) : "—"}</b></div></div>{orderStatus.type === "err" && <div className="at-order-error">{orderStatus.msg}</div>}{orderStatus.type === "ok" && <div className="at-order-ok">{orderStatus.msg}</div>}<button
   className={`at-place-order ${side}`}

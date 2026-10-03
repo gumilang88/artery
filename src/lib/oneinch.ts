@@ -43,6 +43,11 @@ export async function orderbookAll(page = 1, limit = 100): Promise<OneinchOrder[
   return (await get("/all", { page: String(page), limit: String(limit) }, "orderbook")) as OneinchOrder[];
 }
 
+export async function openOrdersByMaker(maker: string): Promise<OneinchOrder[]> {
+  if (!/^0x[a-fA-F0-9]{40}$/.test(maker)) throw new Error("Invalid wallet address");
+  return (await get(`/address/${maker}`, { page: "1", limit: "100" }, "orderbook")) as OneinchOrder[];
+}
+
 // Price for a token denominated in USDC via 1inch quote (1 unit -> USDC).
 export async function usdcPrice(token: string, tokenDecimals = 18): Promise<number> {
   const USDC = "0x3600000000000000000000000000000000000000";
