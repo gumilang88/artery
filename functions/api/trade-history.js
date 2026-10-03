@@ -80,12 +80,19 @@ export async function onRequest({ request }) {
     const fromTopic = addressTopic(owner);
     const windows = [];
     for (let end = latest; end > start; end -= 4000) windows.push({ fromBlock: `0x${Math.max(start + 1, end - 3999).toString(16)}`, toBlock: `0x${end.toString(16)}` });
+    let scannedWindows = 0;
+    let partial = false;
     for (const window of windows) {
+      let windowComplete = true;
       for (const topics of [[TRANSFER, fromTopic], [TRANSFER, null, fromTopic]]) {
-        const logs = await rpc("eth_getLogs", [{ ...window, address: [USDC, token], topics }]);
-        for (const log of logs) if (validHash(log.transactionHash)) hashes.set(log.transactionHash.toLowerCase(), log.blockNumber);
+        try {
+          const logs = await rpc("eth_getLogs", [{ ...window, address: [USDC, token], topics }]);
+          for (const log of logs) if (validHash(log.transactionHash)) hashes.set(log.transactionHash.toLowerCase(), log.blockNumber);
+        } catch { windowComplete = false; partial = true; }
       }
+      if (windowComplete) scannedWindows++;
     }
+    if (!scannedWindows && !hashes.size) throw Error("All ARC log scans failed");
     const candidates = [...hashes.entries()].sort((a, b) => Number(BigInt(b[1])) - Number(BigInt(a[1]))).slice(0, 80);
     const trades = [];
     for (let i = 0; i < candidates.length; i += 5) {
@@ -94,7 +101,7 @@ export async function onRequest({ request }) {
       if (trades.length >= 30) break;
     }
     trades.sort((a, b) => b.blockNumber - a.blockNumber);
-    return json({ trades: trades.slice(0, 30), scannedFromBlock: start, scannedToBlock: latest, complete: false, source: "ARC RPC" });
+    return json({ trades: trades.slice(0, 30), scannedFromBlock: start, scannedToBlock: latest, scannedWindows, requestedWindows: windows.length, partial, complete: false, source: "ARC RPC" });
   } catch (error) {
     return json({ error: "ARC trade history temporarily unavailable", detail: error instanceof Error ? error.message : "RPC failed" }, 502);
   }
