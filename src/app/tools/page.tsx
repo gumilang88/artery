@@ -73,8 +73,9 @@ export default function PortfolioPage() {
       {!walletAddress ? (
         <div className="pf-connect">
           <p>Connect your wallet to scan your ARC token holdings.</p>
+          {wallet.error && <small className="pf-error">{wallet.error}</small>}
           <button className="pf-connect-btn" onClick={wallet.connect} disabled={wallet.connecting}>
-            {wallet.connecting ? "Connecting…" : "Connect Wallet"}
+            {wallet.connecting ? "Switching to ARC…" : "Connect Wallet"}
           </button>
         </div>
       ) : loading && !data ? (

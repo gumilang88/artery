@@ -49,7 +49,10 @@ export function GeckoChart({ token, symbol }: { token: string; symbol: string })
     priceSeries.current?.setData([]); volumeSeries.current?.setData([]);
     const load = async () => {
       try {
-        const response = await fetch(`/api/peach-chart/?token=${token}&interval=${interval}`, { cache: "no-store" });
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 8000);
+        const response = await fetch(`/api/peach-chart/?token=${token}&interval=${interval}`, { cache: "no-store", signal: controller.signal });
+        window.clearTimeout(timeout);
         if (!response.ok) throw Error("OHLCV unavailable");
         const payload = await response.json();
         if (!active) return;

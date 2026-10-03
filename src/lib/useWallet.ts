@@ -35,28 +35,6 @@ function getProvider() {
 export function useWallet() {
   const [state, setState] = useState<WalletState>({ address: null, chainId: null, connecting: false, error: null });
 
-  const connect = useCallback(async () => {
-    const provider = getProvider();
-    if (!provider) {
-      setState(s => ({ ...s, error: "No wallet detected. Install MetaMask or Rabby." }));
-      return null;
-    }
-    setState(s => ({ ...s, connecting: true, error: null }));
-    try {
-      const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
-      const chainId = (await provider.request({ method: "eth_chainId" })) as string;
-      setState({ address: accounts[0] ?? null, chainId, connecting: false, error: null });
-      return accounts[0] ?? null;
-    } catch (e) {
-      setState(s => ({ ...s, connecting: false, error: e instanceof Error ? e.message : "Connection rejected" }));
-      return null;
-    }
-  }, []);
-
-  const disconnect = useCallback(() => {
-    setState({ address: null, chainId: null, connecting: false, error: null });
-  }, []);
-
   const switchToArc = useCallback(async () => {
     const provider = getProvider();
     if (!provider) return false;
@@ -75,6 +53,42 @@ export function useWallet() {
       }
       return false;
     }
+  }, []);
+
+  const connect = useCallback(async () => {
+    const provider = getProvider();
+    if (!provider) {
+      setState(s => ({ ...s, error: "No wallet detected. Install MetaMask or Rabby." }));
+      return null;
+    }
+    setState(s => ({ ...s, connecting: true, error: null }));
+    try {
+      const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
+      let chainId = (await provider.request({ method: "eth_chainId" })) as string;
+      if (chainId.toLowerCase() !== ARC_CHAIN_ID) {
+        const switched = await switchToArc();
+        if (!switched) {
+          setState({ address: accounts[0] ?? null, chainId, connecting: false, error: "Switch your wallet to ARC Mainnet (chain 5042)." });
+          return accounts[0] ?? null;
+        }
+        chainId = (await provider.request({ method: "eth_chainId" })) as string;
+      }
+      setState({ address: accounts[0] ?? null, chainId, connecting: false, error: null });
+      return accounts[0] ?? null;
+    } catch (e) {
+      setState(s => ({ ...s, connecting: false, error: e instanceof Error ? e.message : "Connection rejected" }));
+      return null;
+    }
+  }, [switchToArc]);
+
+  useEffect(() => {
+    if (state.chainId && state.chainId.toLowerCase() !== ARC_CHAIN_ID) {
+      setState(s => ({ ...s, error: "Wrong network. Switch your wallet to ARC Mainnet (chain 5042)." }));
+    }
+  }, [state.chainId]);
+
+  const disconnect = useCallback(() => {
+    setState({ address: null, chainId: null, connecting: false, error: null });
   }, []);
 
   useEffect(() => {

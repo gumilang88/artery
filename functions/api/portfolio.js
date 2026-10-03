@@ -1,6 +1,7 @@
 // Cloudflare Pages Function — /api/portfolio?owner=  (scan wallet across ARC feed)
 const ARC_RPC = "https://rpc.mainnet.arc.io";
 const BAL = "0x70a08231", DEC = "0x313ce567";
+const ERC20_NATIVE_USDC = "0x3600000000000000000000000000000000000000";
 
 async function ethCall(to, data) {
   for (let a = 0; a < 2; a++) {
@@ -39,7 +40,13 @@ export async function onRequest(context) {
   } catch { return new Response(JSON.stringify({ error: "market feed unavailable" }), { status: 502, headers: { ...cors, "content-type": "application/json" } }); }
 
   const holdings = [];
-  const CONCURRENCY = 8;
+  const nativeBalanceHex = await fetch(ARC_RPC, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBalance", params: [owner, "latest"], id: 1 }),
+  }).then(r => r.json()).then(j => j.result || "0x0").catch(() => "0x0");
+  const nativeBalance = BigInt(nativeBalanceHex).toString();
+  const CONCURRENCY = 12;
   const queue = [...tokens];
   const workers = Array.from({ length: CONCURRENCY }, async () => {
     while (queue.length) {
@@ -59,5 +66,5 @@ export async function onRequest(context) {
   holdings.sort((a, b) => b.valueUsd - a.valueUsd);
   const totalUsd = holdings.reduce((s, h) => s + h.valueUsd, 0);
 
-  return new Response(JSON.stringify({ owner, totalUsd, count: holdings.length, holdings, scanned: tokens.length }), { headers: { ...cors, "content-type": "application/json" } });
+  return new Response(JSON.stringify({ owner, chainId: 5042, network: "ARC Mainnet", nativeBalance, totalUsd, count: holdings.length, holdings, scanned: tokens.length }), { headers: { ...cors, "content-type": "application/json" } });
 }
