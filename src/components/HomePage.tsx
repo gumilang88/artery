@@ -50,21 +50,21 @@ function usePeachMarkets() {
 const featureCards = [
   { icon: Search, title: "Deep Market Discovery", text: "Browse ARC tokens with real-time price, volume, and liquidity data from the terminal feed." },
   { icon: Route, title: "Contract-First Routing", text: "Every trade routes by contract address — no ambiguity, no duplicate symbol confusion." },
-  { icon: BarChart3, title: "Institutional Analytics", text: "Compare price, liquidity, volume, and 24-hour movement with institutional-grade precision." },
+  { icon: BarChart3, title: "Market Context", text: "See price, liquidity, volume, and 24-hour movement before opening a trade." },
   { icon: Wallet, title: "Wallet-Ready Flow", text: "Review the market and route before connecting. Trade execution is built for safety first." },
-  { icon: Gauge, title: "Sub-Second Updates", text: "Market feed refreshes every 15 seconds. Chart and order data update in real-time." },
-  { icon: Radio, title: "Live Market Feed", text: "ARC market data streams continuously while the page is open. Outages are shown clearly." },
-  { icon: LockKeyhole, title: "Secure Identity", text: "Every market is keyed by its contract address — duplicate symbols remain distinct and verifiable." },
+  { icon: Gauge, title: "Measured Updates", text: "Market feed refreshes every 15 seconds; order and chart sources update on their own cadence." },
+  { icon: Radio, title: "Visible Feed Status", text: "See when market data is current or temporarily unavailable instead of mistaking stale prices for live ones." },
+  { icon: LockKeyhole, title: "Verifiable Assets", text: "Token symbols stay paired with contract addresses, so duplicate tickers are easy to distinguish." },
   { icon: Blocks, title: "ARC Native", text: "Network settings, explorer links, quote assets, and infrastructure built around ARC Mainnet." },
 ] as const;
 
 const faq = [
   ["What is Artery?", "Artery is an ARC market interface showing tokens from Artery's ARC terminal."],
   ["Where do the tokens come from?", "The list reads Artery's ARC terminal feed with the 24h timeframe. If the source is unavailable, Artery shows an unavailable state rather than a stale list."],
-  ["Does Artery custody funds?", "The current interface displays market data and a trading preview. Onchain execution has not been enabled."],
+  ["Does Artery custody funds?", "No. The wallet signs and sends trades directly on ARC; Artery never holds your tokens."],
   ["Why can two tokens share a symbol?", "Symbols are display labels. Artery identifies markets by contract address, so duplicate symbols remain separate."],
-  ["What do the prices represent?", "Prices shown in the market list are Artery's USD reference prices. The trading interface remains a preview, not an executable quote."],
-  ["Is the trading button live?", "The current build contains the complete interface and route preparation. Onchain submission is intentionally not presented as live until router execution is wired and verified."],
+  ["What do the prices represent?", "Market-list prices are USD reference prices from the ARC feed. Your executable swap quote comes from 1inch when you place a market trade."],
+  ["Is the trading button live?", "Yes. A connected wallet can sign limit orders for the 1inch ARC orderbook or send market swaps on ARC. Check the quote and wallet prompt before confirming."],
 ] as const;
 
 function TokenMark({ src, symbol, size = 28 }: { src?: string; symbol: string; size?: number }) {
@@ -182,10 +182,10 @@ export function HomePage() {
         <div className="home-hero-copy">
           <div>
             <span className="hm-eyebrow"><i /> ARC Mainnet · Live</span>
-            <h1>The Premier ARC<br />Market Terminal<br /><span>For Spot Trading.</span></h1>
+            <h1>ARC markets.<br />One clear view.<br /><span>Trade on your terms.</span></h1>
           </div>
           <div className="hm-hero-side">
-            <p>Discover tokens, track real-time volume, and trade across ARC with institutional-grade speed.</p>
+            <p>Find tokens by contract, compare live market data, and place ARC trades from one desk.</p>
             <div><Link className="home-cta primary" href="/markets/spot">Explore Spot Markets <ArrowRight size={15} /></Link><Link className="home-cta" href="/trade">Start Trading</Link></div>
           </div>
         </div>
@@ -230,7 +230,7 @@ export function HomePage() {
       </section>
 
       <section ref={ref_feature} className="feature-section reveal">
-        <div className="hm-section-heading"><span className="hm-section-label">INSTITUTIONAL-GRADE SPEED &amp; ENGINEERING</span><h2>Built for serious<br />traders.</h2><p>Every component is engineered for speed, accuracy, and reliability — from market data to order execution.</p></div>
+        <div className="hm-section-heading"><span className="hm-section-label">BUILT AROUND ARC MARKETS</span><h2>Built for serious<br />traders.</h2><p>Contract-first discovery, real market context, and wallet-signed execution in one focused workspace.</p></div>
         <div className="feature-grid">{featureCards.map(({ icon: Icon, title, text }) => <article key={title}><Icon size={19} /><div><h3>{title}</h3><p>{text}</p></div></article>)}</div>
       </section>
 
@@ -266,7 +266,7 @@ export function HomePage() {
         <div>{faq.map(([question, answer], index) => <article key={question}><button onClick={() => setOpen(open === index ? null : index)}><span>{String(index + 1).padStart(2, "0")}</span>{question}<b>{open === index ? "−" : "+"}</b></button>{open === index && <p>{answer}</p>}</article>)}</div>
       </section>
 
-      <section className="prefooter"><span className="hm-section-label">START TRADING ON ARC</span><h2>Ready to trade?<br />Jump in.</h2><p>Access the most advanced ARC market terminal available.</p><div><Link className="home-cta primary" href="/markets/spot">Explore Spot Markets <ArrowRight size={15} /></Link><Link className="home-cta" href="/connect">Connect Wallet</Link></div></section>
+      <section className="prefooter"><span className="hm-section-label">START TRADING ON ARC</span><h2>Ready to trade?<br />Jump in.</h2><p>Pick a market, review the pair, and trade with your own wallet.</p><div><Link className="home-cta primary" href="/markets/spot">Explore Spot Markets <ArrowRight size={15} /></Link><Link className="home-cta" href="/connect">Connect Wallet</Link></div></section>
     <Footer />
     </main>
   );
