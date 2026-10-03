@@ -1,15 +1,25 @@
 // Cloudflare Pages Function — /api/balance?token=&owner=&spender=
-const ARC_RPC = "https://rpc.mainnet.arc.io";
+const ARC_RPCS = [
+  "https://rpc.mainnet.arc.io",
+  "https://arc.drpc.org",
+  "https://arc-rpc.publicnode.com",
+];
 
 async function ethCall(to, data) {
-  const r = await fetch(ARC_RPC, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", method: "eth_call", params: [{ to, data }, "latest"], id: 1 }),
-  });
-  const json = await r.json();
-  if (json.error || !json.result) return null;
-  return json.result;
+  for (const rpc of ARC_RPCS) {
+    try {
+      const r = await fetch(rpc, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", method: "eth_call", params: [{ to, data }, "latest"], id: 1 }),
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!r.ok) continue;
+      const json = await r.json();
+      if (typeof json.result === "string" && /^0x[0-9a-fA-F]+$/.test(json.result)) return json.result;
+    } catch { /* Try the next ARC RPC. */ }
+  }
+  return null;
 }
 
 const BAL = "0x70a08231", DEC = "0x313ce567", ALLOW = "0xdd62ed3e";
