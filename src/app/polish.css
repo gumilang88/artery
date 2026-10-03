@@ -2,9 +2,12 @@
 :root { --ease-ui: cubic-bezier(.22,1,.36,1); --focus-ring: rgba(232,53,109,.58); }
 html { scroll-behavior: smooth; }
 ::selection { background: rgba(232,53,109,.35); color: #fff; }
-body,button,input,select,textarea { font-weight: 450; }
-strong,b,h1,h2,h3,h4 { font-weight: 600; }
-code,pre,input[type="number"] { font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+body,button,input,select,textarea { font-weight: 450; font-feature-settings: "cv01", "ss03"; }
+strong,b,h1,h2,h3,h4 { font-weight: 600; font-feature-settings: "cv01", "ss03"; }
+code,pre,input[type="number"] { font-variant-numeric: tabular-nums; letter-spacing: .01em; font-feature-settings: "tnum", "cv01", "ss03"; }
+.hero h1,.home-page h1,.page-title,.article h1 { letter-spacing: -.045em; line-height: 1.04; }
+.home-page h2,.article h2 { letter-spacing: -.025em; }
+.hm-market-row,.rank-row,.at-account-data,.at-trade-row,.at-instrument,.am-directory { font-variant-numeric: tabular-nums; }
 :where(button,a,input,[role="tab"]):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
 :where(button,a) { -webkit-tap-highlight-color: transparent; }
 .header { background: rgba(8,11,16,.94); border-bottom-color: #262c38; box-shadow: 0 1px 0 rgba(255,255,255,.025); }
