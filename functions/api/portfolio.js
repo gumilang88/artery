@@ -1,7 +1,6 @@
 // Cloudflare Pages Function — /api/portfolio?owner=  (scan wallet across ARC feed)
 const ARC_RPC = "https://rpc.mainnet.arc.io";
 const BAL = "0x70a08231", DEC = "0x313ce567";
-const ERC20_NATIVE_USDC = "0x3600000000000000000000000000000000000000";
 
 async function ethCall(to, data) {
   for (let a = 0; a < 2; a++) {
@@ -21,7 +20,7 @@ async function ethCall(to, data) {
 }
 
 export async function onRequest(context) {
-  const { request, env } = context;
+  const { request } = context;
   const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,OPTIONS", "Access-Control-Allow-Headers": "Content-Type" };
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
 
@@ -34,7 +33,7 @@ export async function onRequest(context) {
   let tokens = [];
   try {
     const base = new URL(request.url).origin;
-    const m = await fetch(`${base}/api/markets`, { headers: { accept: "application/json" } });
+    const m = await fetch(`${base}/api/markets/`, { headers: { accept: "application/json" } });
     const data = await m.json();
     tokens = Array.isArray(data.tokens) ? data.tokens : [];
   } catch { return new Response(JSON.stringify({ error: "market feed unavailable" }), { status: 502, headers: { ...cors, "content-type": "application/json" } }); }

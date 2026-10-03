@@ -81,11 +81,6 @@ export function useWallet() {
     }
   }, [switchToArc]);
 
-  useEffect(() => {
-    if (state.chainId && state.chainId.toLowerCase() !== ARC_CHAIN_ID) {
-      setState(s => ({ ...s, error: "Wrong network. Switch your wallet to ARC Mainnet (chain 5042)." }));
-    }
-  }, [state.chainId]);
 
   const disconnect = useCallback(() => {
     setState({ address: null, chainId: null, connecting: false, error: null });
@@ -99,9 +94,19 @@ export function useWallet() {
       const accounts = (args[0] as string[]) ?? [];
       setState(s => ({ ...s, address: accounts[0] ?? null }));
     };
-    const onChain = (...args: unknown[]) => {
+    const onChain = async (...args: unknown[]) => {
       const chainId = (args[0] as string) ?? null;
-      setState(s => ({ ...s, chainId }));
+      if (chainId && chainId.toLowerCase() !== ARC_CHAIN_ID) {
+        const switched = await switchToArc();
+        if (switched) {
+          const current = (await provider.request({ method: "eth_chainId" })) as string;
+          setState(s => ({ ...s, chainId: current, error: null }));
+          return;
+        }
+        setState(s => ({ ...s, chainId, error: "Wrong network. Switch your wallet to ARC Mainnet (chain 5042)." }));
+        return;
+      }
+      setState(s => ({ ...s, chainId, error: null }));
     };
 
     provider.on?.("accountsChanged", onAccounts);
@@ -114,7 +119,19 @@ export function useWallet() {
         const list = accounts as string[];
         if (list[0]) {
           provider.request({ method: "eth_chainId" }).then(chainId => {
-            setState(s => ({ ...s, address: list[0], chainId: chainId as string }));
+            const currentChain = chainId as string;
+            if (currentChain.toLowerCase() !== ARC_CHAIN_ID) {
+              switchToArc().then(async switched => {
+                if (!switched) {
+                  setState(s => ({ ...s, address: list[0], chainId: currentChain, error: "Wrong network. Switch your wallet to ARC Mainnet (chain 5042)." }));
+                  return;
+                }
+                const arcChain = (await provider.request({ method: "eth_chainId" })) as string;
+                setState(s => ({ ...s, address: list[0], chainId: arcChain, error: null }));
+              });
+            } else {
+              setState(s => ({ ...s, address: list[0], chainId: currentChain, error: null }));
+            }
           });
         }
       })
@@ -124,7 +141,7 @@ export function useWallet() {
       provider.removeListener?.("accountsChanged", onAccounts);
       provider.removeListener?.("chainChanged", onChain);
     };
-  }, []);
+  }, [switchToArc]);
 
   return { ...state, connect, disconnect, switchToArc };
 }

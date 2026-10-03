@@ -45,14 +45,12 @@ export function GeckoChart({ token, symbol }: { token: string; symbol: string })
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
     setStatus("loading");
     priceSeries.current?.setData([]); volumeSeries.current?.setData([]);
     const load = async () => {
       try {
-        const controller = new AbortController();
-        const timeout = window.setTimeout(() => controller.abort(), 8000);
         const response = await fetch(`/api/peach-chart/?token=${token}&interval=${interval}`, { cache: "no-store", signal: controller.signal });
-        window.clearTimeout(timeout);
         if (!response.ok) throw Error("OHLCV unavailable");
         const payload = await response.json();
         if (!active) return;
@@ -71,7 +69,7 @@ export function GeckoChart({ token, symbol }: { token: string; symbol: string })
     };
     load();
     const timer = window.setInterval(() => { if (!document.hidden) load(); }, 30_000);
-    return () => { active = false; window.clearInterval(timer); };
+    return () => { active = false; controller.abort(); window.clearInterval(timer); };
   }, [token, interval]);
 
   return <div className="at-gecko-native"><div className="at-gecko-controls"><b>{symbol} / USD</b>{intervals.map(value => <button key={value} type="button" className={interval === value ? "active" : ""} onClick={() => setIntervalValue(value)}>{value}</button>)}<span>{stale ? "Cached OHLCV · Artery" : "OHLCV · Artery"}</span></div><div className="at-gecko-canvas" ref={host} />{status !== "ready" && <div className="at-gecko-state">{status === "loading" ? "Loading market candles…" : status === "empty" ? "No candles for this token and interval." : "Market candle feed unavailable."}</div>}</div>;
