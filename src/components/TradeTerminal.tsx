@@ -13,6 +13,7 @@ import { classifyOrders, orderRows } from "@/lib/accountOrders.mjs";
 
 type Token = { address: string; symbol: string; name: string; logoURI?: string; p?: string; mcap?: string; liqUsd?: string; v24h?: string; ch24h?: string; states?: { tp: string; vu?: string; pc?: number; txs?: string }[] };
 type PoolTrade = { tx: string; at: string; side: "buy" | "sell"; tokenAmount: string; usd: string; priceUsd: string };
+type WalletTrade = { tx: string; at: string | null; side: "buy" | "sell"; token: string; tokenRaw: string; usdcRaw: string; status: "confirmed"; blockNumber: number };
 const fmtAmt = (x: unknown) => { const n = Number(x); if (!Number.isFinite(n) || n <= 0) return "—"; const s = n.toPrecision(6); const f = parseFloat(s); return f.toLocaleString("en-US", { maximumSignificantDigits: 6, useGrouping: false }); };
 const fmt = (x: unknown) => { const n = Number(x); return Number.isFinite(n) && n > 0 ? n >= 1 ? n.toLocaleString("en-US", { maximumFractionDigits: 4 }) : n.toPrecision(6) : "—"; };
 const usd = (x: unknown) => { const n = Number(x); return Number.isFinite(n) ? n >= 1e9 ? `$${(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `$${(n / 1e6).toFixed(2)}M` : n >= 1e3 ? `$${(n / 1e3).toFixed(1)}K` : `$${n.toLocaleString("en-US", { maximumFractionDigits: 2 })}` : "—"; };
@@ -38,6 +39,11 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState<string | null>(null);
   const [ordersRefresh, setOrdersRefresh] = useState(0);
+  const [historyRefresh, setHistoryRefresh] = useState(0);
+  const [walletTrades, setWalletTrades] = useState<WalletTrade[]>([]);
+  const [tradesLoading, setTradesLoading] = useState(false);
+  const [tradesError, setTradesError] = useState<string | null>(null);
+  const [historyRange, setHistoryRange] = useState<{ from: number; to: number } | null>(null);
   const [chartTab, setChartTab] = useState<"chart" | "depth">("chart");
   const [sliderPct, setSliderPct] = useState(0);
   const [postOnly, setPostOnly] = useState(false);
@@ -80,7 +86,8 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
         provider,
       });
       if (result.ok) {
-        setOrderStatus({ type: "ok", msg: `Swapped · ${result.hash.slice(0, 10)}…` });
+        setHistoryRefresh(n => n + 1);
+        setOrderStatus({ type: "ok", msg: `Submitted · ${result.hash.slice(0, 10)}…` }); setAccountTab("trades");
         setAmount(""); setLimitPrice("");
         setTimeout(() => setOrderStatus({ type: "idle" }), 5000);
       } else {
@@ -125,7 +132,7 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
     return () => { active = false; window.clearInterval(timer); };
   }, []);
   const selected = tokens.find(t => t.address.toLowerCase() === address.toLowerCase()) || (!address ? tokens[0] : undefined);
-  const activeTokenAddress = selected?.address || "";
+  const activeTokenAddress = selected?.address || (/^0x[a-fA-F0-9]{40}$/.test(address) ? address : "");
   useEffect(() => {
     let active = true;
     if (!walletAddress) return () => { active = false; };
@@ -142,6 +149,24 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
     const timer = window.setInterval(() => { if (!document.hidden) load(); }, 15_000);
     return () => { active = false; window.clearInterval(timer); };
   }, [walletAddress, ordersRefresh]);
+  useEffect(() => {
+    let active = true;
+    if (!walletAddress || !activeTokenAddress || accountTab !== "trades") return () => { active = false; };
+    const load = async () => {
+      setTradesLoading(true);
+      try {
+        const response = await fetch(`/api/trade-history/?owner=${walletAddress}&token=${activeTokenAddress}`, { cache: "no-store" });
+        const payload = await response.json();
+        if (!response.ok || !Array.isArray(payload.trades)) throw Error(payload.error || "Trade history unavailable");
+        if (active) { setWalletTrades(payload.trades); setHistoryRange({ from: payload.scannedFromBlock, to: payload.scannedToBlock }); setTradesError(null); }
+      } catch (error) {
+        if (active) setTradesError(error instanceof Error ? error.message : "Trade history unavailable");
+      } finally { if (active) setTradesLoading(false); }
+    };
+    load();
+    const timer = window.setInterval(() => { if (!document.hidden) load(); }, 30_000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [walletAddress, activeTokenAddress, accountTab, historyRefresh]);
   useEffect(() => {
     let active = true;
     setTrades([]);
@@ -236,7 +261,7 @@ export function TradeTerminal({ initialAddress }: { initialAddress?: string }) {
       </section>
       <aside className="at-market-column"><div className="at-market-tabs"><span className="at-market-tab-active">Recent Trades</span></div><div className="at-market-trades"><div className="at-trades-head"><span>Time</span><span>Side</span><span>Amount</span><span>USD</span></div><div className="at-trades-list">{trades.length ? trades.slice(0, 50).map((trade, index) => <div className="at-trade-row" key={`${trade.tx}-${index}`}><time dateTime={trade.at}>{new Date(trade.at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit", timeZone: "UTC" })}</time><b className={trade.side === "buy" ? "up" : "down"}>{trade.side.toUpperCase()}</b><span>{fmtAmt(trade.tokenAmount)}</span><span>{usd(trade.usd)}</span><a href={`https://explorer.arc.io/tx/${trade.tx}`} target="_blank" rel="noopener noreferrer" aria-label="View tx"><ExternalLink size={11}/></a></div>) : <div className="at-history-empty">{selected ? "No recent trades." : "Select a token."}</div>}</div></div></aside>
       <section className="at-account-panel"><div className="at-account-tabs"><button className={accountTab === "orders" ? "active" : ""} onClick={() => setAccountTab("orders")}>Open Orders</button><button className={accountTab === "history" ? "active" : ""} onClick={() => setAccountTab("history")}>Order History</button><button className={accountTab === "trades" ? "active" : ""} onClick={() => setAccountTab("trades")}>Trade History</button><button className={accountTab === "balances" ? "active" : ""} onClick={() => setAccountTab("balances")}>Balances</button></div>
-        <div className="at-account-table">{accountTab === "balances" ? <div className="at-account-balances"><b>USDC</b><span>{walletAddress ? displayUsdcBalance !== null ? fmtAmt(displayUsdcBalance) : "Loading…" : "Connect wallet"}</span><b>{selected?.symbol || "TOKEN"}</b><span>{walletAddress ? displayTokenBalance !== null ? fmtAmt(displayTokenBalance) : "Loading…" : "Connect wallet"}</span></div> : accountTab === "orders" ? <><div className="at-account-head"><span>Opened</span><span>Pair</span><span>Side</span><span>Type</span><span>Price</span><span>Amount</span><span>Status</span></div>{!walletAddress ? <div className="at-account-empty">Connect wallet to view open orders.</div> : ordersError ? <div className="at-account-empty">Order feed unavailable: {ordersError}</div> : ordersLoading && !openOrders.length ? <div className="at-account-empty">Loading open orders…</div> : visibleOrders.length ? visibleOrders.map(row => <div className="at-account-data" key={row.orderHash}><span>{new Date(row.at).toLocaleString("en-US", {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span><span>{row.symbol}/USDC</span><b className={row.side === "BUY" ? "up" : "down"}>{row.side}</b><span>Limit</span><span>${row.price}</span><span>{row.amount}</span><span><a href={`https://explorer.arc.io/search?q=${row.orderHash}`} target="_blank" rel="noopener noreferrer">Open</a></span></div>) : <div className="at-account-empty">No open orders for this pair.</div>}</> : <div className="at-account-empty">{!walletAddress ? "Connect wallet to view account activity." : accountTab === "history" ? "Order history isn't indexed yet; open orders above are live." : "Wallet trade history isn't indexed yet; Recent Trades are public pool trades."}</div>}</div>
+        <div className="at-account-table">{accountTab === "balances" ? <div className="at-account-balances"><b>USDC</b><span>{walletAddress ? displayUsdcBalance !== null ? fmtAmt(displayUsdcBalance) : "Loading…" : "Connect wallet"}</span><b>{selected?.symbol || "TOKEN"}</b><span>{walletAddress ? displayTokenBalance !== null ? fmtAmt(displayTokenBalance) : "Loading…" : "Connect wallet"}</span></div> : accountTab === "orders" ? <><div className="at-account-head"><span>Opened</span><span>Pair</span><span>Side</span><span>Type</span><span>Price</span><span>Amount</span><span>Status</span></div>{!walletAddress ? <div className="at-account-empty">Connect wallet to view open orders.</div> : ordersError ? <div className="at-account-empty">Order feed unavailable: {ordersError}</div> : ordersLoading && !openOrders.length ? <div className="at-account-empty">Loading open orders…</div> : visibleOrders.length ? visibleOrders.map(row => <div className="at-account-data" key={row.orderHash}><span>{new Date(row.at).toLocaleString("en-US", {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span><span>{row.symbol}/USDC</span><b className={row.side === "BUY" ? "up" : "down"}>{row.side}</b><span>Limit</span><span>${row.price}</span><span>{row.amount}</span><span><a href={`https://explorer.arc.io/search?q=${row.orderHash}`} target="_blank" rel="noopener noreferrer">Open</a></span></div>) : <div className="at-account-empty">No open orders for this pair.</div>}</> : accountTab === "trades" ? <><div className="at-account-head"><span>Time (UTC)</span><span>Pair</span><span>Side</span><span>Type</span><span>Price</span><span>Amount</span><span>Transaction</span></div>{!walletAddress ? <div className="at-account-empty">Connect wallet to view your trade history.</div> : !activeTokenAddress ? <div className="at-account-empty">Select a market to view wallet trades.</div> : tradesError ? <div className="at-account-empty">{tradesError}</div> : tradesLoading && !walletTrades.length ? <div className="at-account-empty">Reading confirmed ARC trades…</div> : <>{walletTrades.map(trade => { const tokenAmount = Number(trade.tokenRaw) / Math.pow(10, tokenDecimals); const usdcAmount = Number(trade.usdcRaw) / 1e6; return <div className="at-account-data" key={trade.tx}><span>{trade.at ? new Date(trade.at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) : `Block ${trade.blockNumber}`}</span><span>{selected?.symbol || `${trade.token.slice(0, 6)}…${trade.token.slice(-4)}`}/USDC</span><b className={trade.side === "buy" ? "up" : "down"}>{trade.side.toUpperCase()}</b><span>Market</span><span>{tokenAmount > 0 ? `$${fmtAmt(usdcAmount / tokenAmount)}` : "—"}</span><span>{fmtAmt(tokenAmount)} {selected?.symbol || "TOKEN"}</span><span><a href={`https://explorer.arc.io/tx/${trade.tx}`} target="_blank" rel="noopener noreferrer" title={trade.tx}>{trade.tx.slice(0, 8)}…</a></span></div>; })}{!walletTrades.length && <div className="at-account-empty">No confirmed swaps found in the recent scanned blocks.</div>}<div className="at-history-coverage">Recent ARC blocks {historyRange ? `${historyRange.from.toLocaleString()}–${historyRange.to.toLocaleString()}` : ""} · 1inch market swaps only · older trades may not appear</div></>}</> : <div className="at-account-empty">{!walletAddress ? "Connect wallet to view account activity." : "Order history isn't indexed yet; open orders above are live."}</div>}</div>
       </section>
       <aside className="at-order-column"><section className="at-order-form"><div className="at-side-tabs"><button className={side === "buy" ? "buy active" : ""} onClick={() => setSide("buy")}>Buy</button><button className={side === "sell" ? "sell active" : ""} onClick={() => setSide("sell")}>Sell</button></div><div className="at-type-tabs"><button className={orderType === "limit" ? "active" : ""} onClick={() => setOrderType("limit")}>Limit</button><button className={orderType === "market" ? "active" : ""} onClick={() => setOrderType("market")}>Market</button><button className="at-stop-tab">Stop</button></div><div className="at-available">Available <b>{side === "sell" ? (displayTokenBalance !== null ? `${fmtAmt(displayTokenBalance)} ${selected?.symbol || "TOKEN"}` : "—") : (displayUsdcBalance !== null ? `${fmtAmt(displayUsdcBalance)} USDC` : "—")}</b>{side === "buy" && <button type="button" className="at-max-btn" onClick={handleMax}>Max</button>}{side === "sell" && <button type="button" className="at-max-btn" onClick={handleMax}>Max</button>}</div>{orderType === "limit" && <label className="at-field">Price <span>USD</span><input type="number" min="0" step="any" placeholder={selected ? fmt(selected.p) : "0.00"} value={limitPrice} onChange={e => setLimitPrice(e.target.value)} /></label>}<label className="at-field">Amount <span>{side === "buy" ? "USDC" : selected?.symbol || "TOKEN"}</span><input type="number" min="0" step="any" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} /></label><div className="at-slider"><input type="range" min="0" max="100" step="25" value={sliderPct} onChange={e => setSliderPct(Number(e.target.value))} /><div className="at-slider-marks"><span className={sliderPct >= 0 ? "active" : ""} /><span className={sliderPct >= 25 ? "active" : ""} /><span className={sliderPct >= 50 ? "active" : ""} /><span className={sliderPct >= 75 ? "active" : ""} /><span className={sliderPct >= 100 ? "active" : ""} /></div></div><div className="at-order-options"><label className="at-checkbox"><input type="checkbox" checked={postOnly} onChange={e => setPostOnly(e.target.checked)} /> Post Only</label><button className="at-tp-sl">TP/SL</button></div><div className="at-order-summary"><div><span>{orderType === "market" && side === "buy" ? "You spend" : "Order Total"}</span><b>{amountNum && (orderType === "market" && side === "buy" ? true : activePrice) ? (orderType === "market" && side === "buy" ? `$${amountNum.toLocaleString("en-US",{maximumFractionDigits:2})}` : usd(estimate)) : "—"}</b></div></div>{orderStatus.type === "err" && <div className="at-order-error">{orderStatus.msg}</div>}{orderStatus.type === "ok" && <div className="at-order-ok">{orderStatus.msg}</div>}<button
   className={`at-place-order ${side}`}
