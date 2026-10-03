@@ -9,28 +9,29 @@ const fmt = (value: number) => value >= 1e9 ? `$${(value / 1e9).toFixed(2)}B` : 
 
 export function SpotVolumeChart({ value, live }: { value: number; live: boolean }) {
   const host = useRef<HTMLDivElement>(null);
-  const [points, setPoints] = useState<Point[]>([]);
   const [active, setActive] = useState<number | null>(null);
-
-  useEffect(() => {
+  const [points, setPoints] = useState<Point[]>(() => {
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]") as Point[];
-      setPoints(parsed.filter(point => Number.isFinite(point.time) && Number.isFinite(point.value) && Date.now() - point.time < 86_400_000).slice(-MAX_POINTS));
-    } catch { setPoints([]); }
-  }, []);
+      return parsed.filter(point => Number.isFinite(point.time) && Number.isFinite(point.value) && Date.now() - point.time < 86_400_000).slice(-MAX_POINTS);
+    } catch { return []; }
+  });
 
   useEffect(() => {
     if (!live || !Number.isFinite(value) || value <= 0) return;
-    setPoints(previous => {
-      const now = Date.now();
-      const next = [...previous];
-      const last = next[next.length - 1];
-      if (last && now - last.time < 10_000) next[next.length - 1] = { time: now, value };
-      else next.push({ time: now, value });
-      const limited = next.slice(-MAX_POINTS);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(limited));
-      return limited;
-    });
+    const id = setTimeout(() => {
+      setPoints(previous => {
+        const now = Date.now();
+        const next = [...previous];
+        const last = next[next.length - 1];
+        if (last && now - last.time < 10_000) next[next.length - 1] = { time: now, value };
+        else next.push({ time: now, value });
+        const limited = next.slice(-MAX_POINTS);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(limited));
+        return limited;
+      });
+    }, 0);
+    return () => clearTimeout(id);
   }, [value, live]);
 
   const chart = useMemo(() => {

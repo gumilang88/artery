@@ -6,7 +6,7 @@ const columns = [
     links: [
       { label: "Markets", href: "/markets/spot" },
       { label: "Trade", href: "/trade" },
-      { label: "Announcements", href: "/announcements" },
+      { label: "Portfolio", href: "/tools" },
     ],
   },
   {
