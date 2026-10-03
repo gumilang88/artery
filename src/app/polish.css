@@ -48,4 +48,15 @@ code,pre,input[type="number"] { font-variant-numeric: tabular-nums; letter-spaci
 .home-page .reveal.is-visible { transform: translateY(0); }
 .home-page .home-cta,.home-page .hm-market-row,.home-page .feature-grid article { transition-duration: .23s; transition-timing-function: var(--ease-ui); }
 @media (max-width: 800px) { .home-page .home-hero-copy { gap: 22px; } .home-page .home-split,.home-page .engine-section { padding-top: 70px; padding-bottom: 70px; } }
+@media (max-width: 640px) {
+  .header{height:auto;min-height:52px;padding:8px 10px;gap:8px;flex-wrap:wrap}
+  .brand{flex:0 0 auto}.header-spacer{display:none}.header>.nav{order:3;display:flex;width:100%;overflow-x:auto;gap:2px;padding-top:4px;border-top:1px solid rgba(255,255,255,.06)}
+  .header>.nav a{font-size:10px;padding:6px 10px;flex:0 0 auto}.header>.btn:not(.primary){padding:0 9px}.header>.btn[aria-label="Settings"]{display:none}
+  .header>.btn.primary,.wallet-chip{margin-left:auto}
+  .home-page .home-hero-copy{display:block;padding:0 18px}.home-page .home-hero{padding-top:76px}.home-page .home-hero h1{font-size:38px;letter-spacing:-.055em}.home-page .hm-hero-side{padding-top:24px}.home-page .hm-hero-side>div{flex-wrap:wrap}
+  .home-page .home-split,.home-page .engine-section,.home-page .hm-section-heading.split{display:block;padding-left:18px;padding-right:18px}.home-page .home-section-copy{margin-bottom:32px}.home-page .feature-grid{grid-template-columns:1fr;margin-left:18px;margin-right:18px}.home-page .feature-grid article{min-height:0;padding:20px}.home-page .unified-diagram{overflow-x:auto;margin:0 18px;padding-bottom:8px}.home-page .build-section,.home-page .faq-section{padding-left:18px;padding-right:18px}
+  .artery-markets-page .am-workspace{padding-left:12px;padding-right:12px}.artery-markets-page .am-page-intro{display:block}.artery-markets-page .am-page-intro h1,.artery-markets-page .am-page-intro h2{font-size:26px}.artery-markets-page .am-featured-grid{grid-template-columns:1fr}.artery-markets-page .am-directory{overflow-x:auto}.artery-markets-page .am-directory table{min-width:720px}
+  .docs-tabs{overflow-x:auto;padding:0 10px}.docs-tabs a{flex:0 0 auto;padding:12px 13px}.docs-layout{padding:18px 12px}.article{padding:24px 8px}.article h1{font-size:30px}
+  .pf-page{padding:24px 12px 70px}.pf-hero{display:block}.pf-panel{overflow-x:auto}.pf-panel table{min-width:620px}
+}
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .modalback,.modal { animation: none; } .btn { transition: none; } .home-page .reveal { transform: none; transition: none; } }
